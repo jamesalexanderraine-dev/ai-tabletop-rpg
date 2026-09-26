@@ -1,0 +1,48 @@
+:root {
+  --bg: #f6f1e7;
+  --ink: #2a241c;
+  --muted: #7a6d5b;
+  --accent: #8a3b12;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #1b1712;
+    --ink: #eadfcb;
+    --muted: #a3957f;
+    --accent: #e0915a;
+  }
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: Georgia, "Iowan Old Style", "Palatino Linotype", serif;
+  line-height: 1.6;
+}
+
+main {
+  max-width: 38rem;
+  margin: 0 auto;
+  padding: 3rem 1rem;
+}
+
+h1 {
+  font-weight: 400;
+  letter-spacing: 0.02em;
+}
+
+h1::first-letter {
+  color: var(--accent);
+}
+
+.muted {
+  color: var(--muted);
+  font-size: 0.9rem;
+}
