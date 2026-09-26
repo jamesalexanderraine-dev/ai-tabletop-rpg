@@ -2,7 +2,8 @@
 // proposes changes through tools, and the engine validates and applies them.
 
 import type { Rng } from "@/engine/dice";
-import { appendTurn, describeRoll, remember, requestCheck, type GameState, type Roll, type Turn } from "@/engine/game";
+import { appendTurn, type Change, type GameState, type Roll, type Turn } from "@/engine/game";
+import { applyDmTool } from "@/engine/tools";
 import { buildStateSummary, HISTORY_WINDOW } from "./prompt";
 import type { DmToolResult, DungeonMaster } from "./types";
 
@@ -19,21 +20,15 @@ export async function playTurn(
 ): Promise<TurnResult> {
   let working = state;
   const rolls: Roll[] = [];
+  const changes: Change[] = [];
 
   const runTool = (name: string, input: unknown): DmToolResult => {
-    if (name === "roll_check") {
-      const outcome = requestCheck(working, input, rolls.length, rng);
-      if (!outcome.ok) return { content: outcome.error, isError: true };
-      rolls.push(outcome.value);
-      return { content: describeRoll(outcome.value), isError: false };
-    }
-    if (name === "remember") {
-      const outcome = remember(working, input);
-      if (!outcome.ok) return { content: outcome.error, isError: true };
-      working = outcome.value;
-      return { content: "Saved.", isError: false };
-    }
-    return { content: `There is no tool called "${name}".`, isError: true };
+    const applied = applyDmTool(working, name, input, { rollsSoFar: rolls.length, rng });
+    if (!applied.ok) return { content: applied.error, isError: true };
+    working = applied.state;
+    if (applied.roll) rolls.push(applied.roll);
+    if (applied.change) changes.push(applied.change);
+    return { content: applied.message, isError: false };
   };
 
   const narration = await dm.narrate(
@@ -45,6 +40,6 @@ export async function playTurn(
     runTool,
   );
 
-  const turn: Turn = { player: playerInput, narration: narration.trim(), rolls };
+  const turn: Turn = { player: playerInput, narration: narration.trim(), rolls, changes };
   return { state: appendTurn(working, turn), turn };
 }

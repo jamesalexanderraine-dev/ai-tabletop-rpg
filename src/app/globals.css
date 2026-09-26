@@ -7,6 +7,7 @@
   --panel: #efe7d8;
   --win: #3f6b35;
   --lose: #8a2f22;
+  --warn: #9a6a12;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -19,6 +20,7 @@
     --panel: #262019;
     --win: #9cc48a;
     --lose: #e58a78;
+    --warn: #e2b65c;
   }
 }
 
@@ -71,6 +73,65 @@ textarea {
   color: var(--accent);
 }
 
+.vitals {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.15rem 0.7rem;
+  min-width: 0;
+}
+
+.where {
+  flex-basis: 100%;
+  color: var(--muted);
+  font-size: 0.8rem;
+  font-style: italic;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.hp {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.8rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.hp-track {
+  width: 4.5rem;
+  height: 0.45rem;
+  border-radius: 1rem;
+  background: var(--rule);
+  overflow: hidden;
+}
+
+.hp-fill {
+  display: block;
+  height: 100%;
+  background: var(--win);
+  transition: width 0.4s ease;
+}
+
+.hp.hurt .hp-fill {
+  background: var(--warn);
+}
+
+.hp.dire .hp-fill {
+  background: var(--lose);
+}
+
+.pack-button {
+  flex: none;
+  align-self: center;
+  padding: 0.3rem 0.8rem;
+  border: 1px solid var(--rule);
+  border-radius: 1rem;
+  background: var(--panel);
+  cursor: pointer;
+}
+
 .link {
   background: none;
   border: 0;
@@ -88,7 +149,7 @@ textarea {
 .turn {
   margin-bottom: 1.4rem;
   /* Clears the sticky header when a new turn scrolls into view. */
-  scroll-margin-top: 3.5rem;
+  scroll-margin-top: 6rem;
 }
 
 .narration p {
@@ -149,6 +210,145 @@ textarea {
 .roll .math {
   color: var(--muted);
   font-variant-numeric: tabular-nums;
+}
+
+.changes {
+  list-style: none;
+  margin: -0.2rem 0 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+
+.change {
+  padding: 0.15rem 0.55rem;
+  border-radius: 1rem;
+  background: var(--panel);
+  color: var(--muted);
+  font-size: 0.8rem;
+}
+
+.change.item span,
+.change.scene span {
+  color: var(--accent);
+}
+
+.change.vitals span {
+  color: var(--lose);
+}
+
+.change.npc span {
+  color: var(--win);
+}
+
+.sheet-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 10;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  background: rgb(0 0 0 / 0.45);
+}
+
+.sheet {
+  width: 100%;
+  max-width: 38rem;
+  max-height: 85dvh;
+  overflow-y: auto;
+  padding: 1rem 1rem calc(1.2rem + env(safe-area-inset-bottom));
+  border-radius: 1rem 1rem 0 0;
+  background: var(--bg);
+}
+
+.sheet-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+}
+
+.sheet h2 {
+  margin: 0;
+  font-weight: 400;
+  color: var(--accent);
+}
+
+.sheet h3 {
+  margin: 1.1rem 0 0.4rem;
+  font-size: 0.8rem;
+  font-weight: 400;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.sheet p,
+.sheet-line {
+  margin: 0.2rem 0;
+}
+
+.muted {
+  color: var(--muted);
+}
+
+.items,
+.people {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.items li,
+.people li {
+  padding: 0.35rem 0;
+  border-bottom: 1px solid var(--rule);
+}
+
+.people .muted {
+  font-size: 0.9rem;
+}
+
+.tags {
+  margin-left: 0.4rem;
+}
+
+.tag {
+  display: inline-block;
+  margin: 0.1rem 0.25rem 0.1rem 0;
+  padding: 0 0.45rem;
+  border-radius: 1rem;
+  background: var(--panel);
+  color: var(--muted);
+  font-size: 0.75rem;
+}
+
+.stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.2rem 0.8rem;
+}
+
+.attitude {
+  font-size: 0.8rem;
+  font-style: italic;
+  color: var(--muted);
+}
+
+.attitude.friendly,
+.attitude.allied {
+  color: var(--win);
+}
+
+.attitude.unfriendly,
+.attitude.hostile {
+  color: var(--lose);
+}
+
+.danger {
+  display: block;
+  margin-top: 1.4rem;
+  color: var(--lose);
 }
 
 .thinking {

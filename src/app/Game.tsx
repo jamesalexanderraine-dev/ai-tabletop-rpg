@@ -4,6 +4,7 @@ import { useEffect, useRef, useState, type FormEvent, type KeyboardEvent } from 
 import {
   capitalize,
   MAX_PLAYER_INPUT_LENGTH,
+  type Change,
   newGame,
   parseGameState,
   type GameState,
@@ -37,6 +38,7 @@ export default function Game() {
   const [draft, setDraft] = useState("");
   const [pendingInput, setPendingInput] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [packOpen, setPackOpen] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
 
@@ -100,6 +102,7 @@ export default function Game() {
     setGame(newGame());
     setError(null);
     setDraft("");
+    setPackOpen(false);
   }
 
   if (!game) return <main className="game" />;
@@ -107,9 +110,13 @@ export default function Game() {
   return (
     <main className="game">
       <header className="bar">
-        <span className="who">{game.character.name ?? "A stranger"}</span>
-        <button type="button" className="link" onClick={startOver} disabled={pendingInput !== null}>
-          New game
+        <div className="vitals">
+          <span className="who">{game.character.name ?? "A stranger"}</span>
+          <HpBar hp={game.character.hp} maxHp={game.character.maxHp} />
+          <span className="where">{game.scene.name}</span>
+        </div>
+        <button type="button" className="pack-button" onClick={() => setPackOpen(true)}>
+          Pack
         </button>
       </header>
 
@@ -150,7 +157,108 @@ export default function Game() {
           Go
         </button>
       </form>
+
+      {packOpen && (
+        <Pack game={game} onClose={() => setPackOpen(false)} onNewGame={startOver} busy={pendingInput !== null} />
+      )}
     </main>
+  );
+}
+
+function HpBar({ hp, maxHp }: { hp: number; maxHp: number }) {
+  const pct = Math.round((hp / maxHp) * 100);
+  const level = pct > 50 ? "good" : pct > 20 ? "hurt" : "dire";
+  return (
+    <span className={`hp ${level}`} role="meter" aria-label="Health" aria-valuenow={hp} aria-valuemin={0} aria-valuemax={maxHp}>
+      <span className="hp-track">
+        <span className="hp-fill" style={{ width: `${pct}%` }} />
+      </span>
+      <span className="hp-text">
+        {hp}/{maxHp}
+      </span>
+    </span>
+  );
+}
+
+// Menus never advance time: the pack only shows code-owned state.
+function Pack({ game, onClose, onNewGame, busy }: { game: GameState; onClose: () => void; onNewGame: () => void; busy: boolean }) {
+  const { character: c, stats, inventory, npcs, scene } = game;
+  useEffect(() => {
+    const onKey = (e: globalThis.KeyboardEvent) => e.key === "Escape" && onClose();
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [onClose]);
+
+  return (
+    <div className="sheet-backdrop" onClick={onClose}>
+      <div className="sheet" role="dialog" aria-modal="true" aria-label="Pack" onClick={(e) => e.stopPropagation()}>
+        <div className="sheet-head">
+          <h2>{c.name ?? "A stranger"}</h2>
+          <button type="button" className="link" onClick={onClose}>
+            Close
+          </button>
+        </div>
+
+        <p className="sheet-line">
+          HP {c.hp}/{c.maxHp} · XP {c.xp}
+          {c.conditions.length > 0 && <> · {c.conditions.join(", ")}</>}
+        </p>
+        <p className="sheet-line muted">{scene.name}</p>
+
+        <h3>Carrying</h3>
+        {inventory.length ? (
+          <ul className="items">
+            {inventory.map((item) => (
+              <li key={item.name}>
+                {item.name}
+                {item.tags.length > 0 && (
+                  <span className="tags">
+                    {item.tags.map((t) => (
+                      <span key={t} className="tag">
+                        {t}
+                      </span>
+                    ))}
+                  </span>
+                )}
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <p className="muted">Nothing but lint.</p>
+        )}
+
+        <h3>Stats</h3>
+        <p className="stats">
+          {Object.entries(stats).map(([s, m]) => (
+            <span key={s}>
+              {capitalize(s)} <strong>{m >= 0 ? `+${m}` : `\u2212${Math.abs(m)}`}</strong>
+            </span>
+          ))}
+        </p>
+
+        {c.backstory.length > 0 && (
+          <>
+            <h3>Who you are</h3>
+            <p>{c.backstory.join(" ")}</p>
+          </>
+        )}
+
+        <h3>People</h3>
+        <ul className="people">
+          {npcs.map((n) => (
+            <li key={n.name}>
+              <strong>{n.name}</strong> <span className={`attitude ${n.attitude}`}>{n.attitude}</span>
+              <br />
+              <span className="muted">{n.note}</span>
+            </li>
+          ))}
+        </ul>
+
+        <button type="button" className="link danger" onClick={onNewGame} disabled={busy}>
+          Start a new game
+        </button>
+      </div>
+    </div>
   );
 }
 
@@ -166,6 +274,13 @@ function TurnView({ turn, first }: { turn: Turn; first: boolean }) {
           <p key={i}>{para}</p>
         ))}
       </div>
+      {turn.changes.length > 0 && (
+        <ul className="changes">
+          {turn.changes.map((change, i) => (
+            <ChangeNote key={i} change={change} />
+          ))}
+        </ul>
+      )}
     </section>
   );
 }
@@ -193,5 +308,21 @@ function RollChip({ roll }: { roll: Roll }) {
         </span>
       </span>
     </p>
+  );
+}
+
+const CHANGE_GLYPHS: Record<Change["kind"], string> = {
+  item: "\u25c6",
+  vitals: "\u2665",
+  npc: "\u263a",
+  scene: "\u2691",
+  note: "\u2022",
+};
+
+function ChangeNote({ change }: { change: Change }) {
+  return (
+    <li className={`change ${change.kind}`}>
+      <span aria-hidden>{CHANGE_GLYPHS[change.kind]}</span> {change.text}
+    </li>
   );
 }

@@ -14,8 +14,6 @@ export interface DmTurnInput {
   playerInput: string;
 }
 
-export type DmToolName = "roll_check" | "remember";
-
 export interface DmToolResult {
   content: string;
   isError: boolean;
