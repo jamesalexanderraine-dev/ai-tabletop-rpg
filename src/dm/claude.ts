@@ -47,7 +47,10 @@ function textOf(message: Message): string {
 export function createClaudeDm(options: { create?: CreateMessage; model?: string } = {}): DungeonMaster {
   const model = options.model ?? dmModel();
   const create: CreateMessage =
-    options.create ?? ((params) => new Anthropic().beta.messages.create(params));
+    options.create ??
+    ((params) =>
+      // Trimmed so a stray space or newline pasted into a settings UI can't break auth.
+      new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY?.trim() }).beta.messages.create(params));
 
   return {
     async narrate(input: DmTurnInput, runTool: DmToolHandler): Promise<string> {

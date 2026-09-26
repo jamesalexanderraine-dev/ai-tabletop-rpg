@@ -2,7 +2,7 @@ import Anthropic from "@anthropic-ai/sdk";
 import { NextResponse } from "next/server";
 import { parseGameState, validatePlayerInput } from "@/engine/game";
 import { createClaudeDm, DmRefusalError } from "@/dm/claude";
-import { hasAnthropicKey } from "@/dm/config";
+import { dmModel, hasAnthropicKey } from "@/dm/config";
 import { playTurn } from "@/dm/turn";
 
 // A turn is a few model calls when the DM rolls dice, so give it room.
@@ -11,6 +11,12 @@ export const dynamic = "force-dynamic";
 
 function error(status: number, message: string) {
   return NextResponse.json({ error: message }, { status });
+}
+
+function apiReason(err: InstanceType<typeof Anthropic.APIError>): string {
+  const body = err.error as { error?: { message?: unknown } } | undefined;
+  const message = body?.error?.message;
+  return typeof message === "string" && message ? message : err.message;
 }
 
 export async function POST(request: Request) {
@@ -40,13 +46,18 @@ export async function POST(request: Request) {
     if (err instanceof Anthropic.RateLimitError) {
       return error(429, "The DM is catching their breath (rate limited). Try again in a moment.");
     }
-    if (err instanceof Anthropic.AuthenticationError || err instanceof Anthropic.PermissionDeniedError) {
-      console.error("DM auth error", err.status);
-      return error(502, "The DM's API key was rejected. Check ANTHROPIC_API_KEY on this deploy.");
-    }
     if (err instanceof Anthropic.APIError) {
-      console.error("DM API error", err.status, err.message);
-      return error(502, "The DM stumbled (API error). Try again.");
+      // Anthropic's own reason, which never includes the key, so problems can be
+      // diagnosed from the phone without digging through Vercel logs.
+      const reason = apiReason(err);
+      console.error("DM API error", err.status, reason);
+      if (err instanceof Anthropic.AuthenticationError) {
+        return error(502, `Anthropic didn't accept the API key (401: ${reason}).`);
+      }
+      if (err instanceof Anthropic.PermissionDeniedError) {
+        return error(502, `The API key isn't allowed to use ${dmModel()} (403: ${reason}).`);
+      }
+      return error(502, `The DM stumbled (${err.status ?? "network"} error: ${reason}). Try again.`);
     }
     console.error("DM turn failed", err);
     return error(500, "Something went wrong running that turn. Try again.");
