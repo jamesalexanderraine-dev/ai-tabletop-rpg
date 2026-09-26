@@ -23,13 +23,15 @@ The game calls Claude through the Anthropic API, so it needs an `ANTHROPIC_API_K
 
 **2. Vercel** (so the preview links can call Claude)
 
-In the Vercel project: Settings → Environment Variables → add `ANTHROPIC_API_KEY`, ticked for Preview and Production. Redeploy. `/api/health` on any deploy reports `"anthropicKeyConfigured": true` once it's picked up.
+In the Vercel project: Settings → Environment Variables → add `ANTHROPIC_API_KEY`, ticked for Preview and Production. `/api/health` on any deploy reports `"anthropicKeyConfigured": true` once it's picked up.
+
+Changing a variable does not update deploys that already exist. After adding or replacing the key, redeploy (Deployments → ⋯ on the latest one → Redeploy), or push a new commit to the pull request. If the game says Anthropic didn't accept the key, the deploy is usually still running with an old key.
 
 Optional: set `DM_MODEL` in either place to change which Claude model plays the DM (default `claude-opus-5`).
 
 ## Preview deploys (one-time setup)
 
-1. Sign in at [vercel.com](https://vercel.com) with GitHub.
+1. Create a free Hobby account at [vercel.com/signup](https://vercel.com/signup) with **Continue with GitHub**. Nothing creates one for you; signing in before it exists shows "Social Account is not yet connected".
 2. **Add New → Project**, import `ai-tabletop-rpg`. Vercel detects Next.js; keep the defaults.
 3. Add `ANTHROPIC_API_KEY` as above.
 

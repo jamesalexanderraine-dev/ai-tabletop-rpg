@@ -3,6 +3,10 @@
   --ink: #2a241c;
   --muted: #7a6d5b;
   --accent: #8a3b12;
+  --rule: #e2d8c6;
+  --panel: #efe7d8;
+  --win: #3f6b35;
+  --lose: #8a2f22;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -11,6 +15,10 @@
     --ink: #eadfcb;
     --muted: #a3957f;
     --accent: #e0915a;
+    --rule: #3a3128;
+    --panel: #262019;
+    --win: #9cc48a;
+    --lose: #e58a78;
   }
 }
 
@@ -25,24 +33,184 @@ body {
   color: var(--ink);
   font-family: Georgia, "Iowan Old Style", "Palatino Linotype", serif;
   line-height: 1.6;
+  -webkit-text-size-adjust: 100%;
 }
 
-main {
+button,
+textarea {
+  font: inherit;
+  color: inherit;
+}
+
+/* The page itself scrolls, with the compose box stuck to the bottom, so the
+   on-screen keyboard pushes the box up instead of covering it. */
+.game {
   max-width: 38rem;
+  min-height: 100dvh;
   margin: 0 auto;
-  padding: 3rem 1rem;
+  display: flex;
+  flex-direction: column;
 }
 
-h1 {
-  font-weight: 400;
-  letter-spacing: 0.02em;
+.bar {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  padding: 0.6rem 1rem;
+  background: var(--bg);
+  border-bottom: 1px solid var(--rule);
+  font-size: 0.9rem;
 }
 
-h1::first-letter {
+.who {
+  font-variant: small-caps;
+  letter-spacing: 0.06em;
   color: var(--accent);
 }
 
-.muted {
+.link {
+  background: none;
+  border: 0;
+  padding: 0;
   color: var(--muted);
-  font-size: 0.9rem;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.story {
+  flex: 1;
+  padding: 1rem 1rem 0.5rem;
+}
+
+.turn {
+  margin-bottom: 1.4rem;
+  /* Clears the sticky header when a new turn scrolls into view. */
+  scroll-margin-top: 3.5rem;
+}
+
+.narration p {
+  margin: 0 0 0.8rem;
+  font-size: 1.08rem;
+}
+
+.opening p:first-child::first-letter {
+  float: left;
+  font-size: 3.1em;
+  line-height: 0.9;
+  padding: 0.08em 0.1em 0 0;
+  color: var(--accent);
+}
+
+.player {
+  margin: 0 0 0.6rem;
+  padding-left: 0.8rem;
+  border-left: 2px solid var(--accent);
+  font-style: italic;
+  color: var(--muted);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.roll {
+  display: flex;
+  gap: 0.7rem;
+  align-items: center;
+  margin: 0 0 0.7rem;
+  padding: 0.45rem 0.7rem;
+  border-radius: 0.5rem;
+  background: var(--panel);
+  font-size: 0.85rem;
+  line-height: 1.35;
+}
+
+.roll .die {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 2.1rem;
+  height: 2.1rem;
+  border-radius: 0.4rem;
+  font-weight: 700;
+  font-size: 1rem;
+  color: var(--bg);
+}
+
+.roll.win .die {
+  background: var(--win);
+}
+
+.roll.lose .die {
+  background: var(--lose);
+}
+
+.roll .math {
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.thinking {
+  color: var(--muted);
+  font-style: italic;
+  animation: breathe 1.6s ease-in-out infinite;
+}
+
+@keyframes breathe {
+  50% {
+    opacity: 0.45;
+  }
+}
+
+.error {
+  color: var(--lose);
+  font-size: 0.95rem;
+}
+
+.compose {
+  position: sticky;
+  bottom: 0;
+  display: flex;
+  gap: 0.5rem;
+  align-items: flex-end;
+  padding: 0.6rem 1rem calc(0.6rem + env(safe-area-inset-bottom));
+  background: var(--bg);
+  border-top: 1px solid var(--rule);
+}
+
+.compose textarea {
+  flex: 1;
+  min-width: 0;
+  resize: none;
+  /* 16px or more stops iOS Safari zooming in on focus. */
+  font-size: 1rem;
+  line-height: 1.4;
+  padding: 0.55rem 0.7rem;
+  border: 1px solid var(--rule);
+  border-radius: 0.6rem;
+  background: var(--panel);
+  outline-color: var(--accent);
+}
+
+.compose button {
+  flex: none;
+  padding: 0.55rem 1rem;
+  border: 0;
+  border-radius: 0.6rem;
+  background: var(--accent);
+  color: var(--bg);
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.compose button:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .thinking {
+    animation: none;
+  }
 }

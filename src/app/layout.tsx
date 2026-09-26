@@ -9,6 +9,9 @@ export const metadata: Metadata = {
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
+  viewportFit: "cover",
+  // Android Chrome: shrink the page when the keyboard opens so the input stays visible.
+  interactiveWidget: "resizes-content",
   themeColor: "#1b1712",
 };
 
