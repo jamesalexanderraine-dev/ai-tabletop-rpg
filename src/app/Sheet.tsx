@@ -2,22 +2,32 @@
 
 import { useEffect, useState, type ReactNode } from "react";
 import { capitalize, type GameState } from "@/engine/game";
-import { MAX_SKILL_RANK, SKILLS, SPELLS, STAT_INFO, xpForNextLevel } from "@/engine/progression";
+import {
+  abilitiesFor,
+  archetypeInfo,
+  MAX_SKILL_RANK,
+  SKILLS,
+  STAT_INFO,
+  xpForNextLevel,
+  type AbilityInfo,
+  type Archetype,
+} from "@/engine/progression";
 
 export function formatMod(m: number): string {
   return m >= 0 ? `+${m}` : `−${Math.abs(m)}`;
 }
 
-export function Meter({ label, value, max, kind }: { label: string; value: number; max: number; kind: "hp" | "mp" }) {
+export function Meter({ label, value, max, kind }: { label: string; value: number; max: number; kind: "hp" | "mp" | "stamina" }) {
   const pct = max > 0 ? Math.round((value / max) * 100) : 0;
-  const level = kind === "mp" ? "mp" : pct > 50 ? "good" : pct > 20 ? "hurt" : "dire";
+  const level = kind !== "hp" ? kind : pct > 50 ? "good" : pct > 20 ? "hurt" : "dire";
+  const prefix = kind === "mp" ? "MP " : kind === "stamina" ? "Stamina " : "";
   return (
     <span className={`meter ${level}`} role="meter" aria-label={label} aria-valuenow={value} aria-valuemin={0} aria-valuemax={max}>
       <span className="meter-track">
         <span className="meter-fill" style={{ width: `${pct}%` }} />
       </span>
       <span className="meter-text">
-        {kind === "mp" ? "MP " : ""}
+        {prefix}
         {value}/{max}
       </span>
     </span>
@@ -47,8 +57,7 @@ export function SheetFrame({ title, onClose, children }: { title: string; onClos
   );
 }
 
-const TABS = ["Character", "Spells", "Pack", "People"] as const;
-type Tab = (typeof TABS)[number];
+type Tab = "Character" | "Abilities" | "Pack" | "People";
 
 export function CharacterSheet({
   game,
@@ -62,17 +71,23 @@ export function CharacterSheet({
   busy: boolean;
 }) {
   const [tab, setTab] = useState<Tab>("Character");
+  const tabs: Array<[Tab, string]> = [
+    ["Character", "Character"],
+    ["Abilities", game.character.archetype === "mage" ? "Spells" : "Abilities"],
+    ["Pack", "Pack"],
+    ["People", "People"],
+  ];
   return (
     <SheetFrame title={game.character.name ?? "A stranger"} onClose={onClose}>
       <nav className="tabs" role="tablist">
-        {TABS.map((t) => (
+        {tabs.map(([t, label]) => (
           <button key={t} type="button" role="tab" aria-selected={tab === t} className={tab === t ? "tab on" : "tab"} onClick={() => setTab(t)}>
-            {t}
+            {label}
           </button>
         ))}
       </nav>
       {tab === "Character" && <CharacterTab game={game} />}
-      {tab === "Spells" && <SpellsTab game={game} />}
+      {tab === "Abilities" && <AbilitiesTab game={game} />}
       {tab === "Pack" && <PackTab game={game} />}
       {tab === "People" && <PeopleTab game={game} />}
       <button type="button" className="link danger" onClick={onNewGame} disabled={busy}>
@@ -90,17 +105,11 @@ function CharacterTab({ game }: { game: GameState }) {
   return (
     <>
       <p className="sheet-line">
-        Level {c.level} · XP {c.xp}
+        {archetypeInfo(c.archetype).name} · Level {c.level} · XP {c.xp}
         {next !== null && <span className="muted"> / {next}</span>}
       </p>
       <p className="sheet-line">
-        HP {c.hp}/{c.maxHp}
-        {c.maxMp > 0 && (
-          <>
-            {" "}
-            · MP {c.mp}/{c.maxMp}
-          </>
-        )}
+        HP {c.hp}/{c.maxHp} · {archetypeInfo(c.archetype).pool === "MP" ? "MP" : "Stamina"} {c.energy}/{c.maxEnergy}
         {c.conditions.length > 0 && <> · {c.conditions.join(", ")}</>}
       </p>
       <p className="sheet-line muted">{game.scene.name}</p>
@@ -175,59 +184,67 @@ export function Pips({ rank }: { rank: number }) {
   );
 }
 
-function SpellsTab({ game }: { game: GameState }) {
+function AbilitiesTab({ game }: { game: GameState }) {
   const [query, setQuery] = useState("");
   const c = game.character;
+  const mage = c.archetype === "mage";
   const q = query.trim().toLowerCase();
-  const matches = SPELLS.filter((s) => !q || `${s.name} ${s.description}`.toLowerCase().includes(q));
-  const known = matches.filter((s) => c.spells.includes(s.id));
-  const learnable = matches.filter((s) => !c.spells.includes(s.id));
+  const matches = abilitiesFor(c.archetype).filter((a) => !q || `${a.name} ${a.description}`.toLowerCase().includes(q));
+  const known = matches.filter((a) => c.abilities.includes(a.id));
+  const learnable = matches.filter((a) => !c.abilities.includes(a.id));
   return (
     <>
       <input
         className="search"
         type="search"
-        placeholder="Search spells"
-        aria-label="Search spells"
+        placeholder={mage ? "Search spells" : "Search abilities"}
+        aria-label={mage ? "Search spells" : "Search abilities"}
         value={query}
         onChange={(e) => setQuery(e.target.value)}
       />
       <h3>Known</h3>
       {known.length ? (
         <ul className="rows">
-          {known.map((s) => (
-            <SpellRow key={s.id} spell={s} />
+          {known.map((a) => (
+            <AbilityRow key={a.id} ability={a} archetype={c.archetype} />
           ))}
         </ul>
       ) : (
-        <p className="muted">{c.spells.length ? "No known spells match." : "No spells yet. You learn your first at level 2."}</p>
+        <p className="muted">Nothing matches.</p>
       )}
       <h3>Not yet learned</h3>
       <ul className="rows">
-        {learnable.map((s) => (
-          <SpellRow key={s.id} spell={s} locked={s.level > c.level} />
+        {learnable.map((a) => (
+          <AbilityRow key={a.id} ability={a} archetype={c.archetype} locked={a.level > c.level} />
         ))}
       </ul>
-      <p className="muted small">To cast, just say so in the story: &ldquo;I cast Mend on my arm.&rdquo;</p>
+      <p className="muted small">
+        {mage
+          ? "To cast, just say so in the story: \u201cI cast Spark on the straw.\u201d"
+          : "To use one, just do it in the story: \u201cI heave the cart off him.\u201d It costs stamina whether or not you name it."}
+      </p>
     </>
   );
 }
 
-export function SpellText({ spell }: { spell: (typeof SPELLS)[number] }) {
+export function AbilityText({ ability, archetype }: { ability: AbilityInfo; archetype: Archetype }) {
   return (
     <span>
-      <strong>{spell.name}</strong> <span className="muted small">{spell.cost} MP</span>
+      <strong>{ability.name}</strong>{" "}
+      <span className="muted small">
+        {ability.cost} {archetypeInfo(archetype).pool === "MP" ? "MP" : "stamina"}
+      </span>
       <br />
-      <span className="small">{spell.description}</span>
+      <span className="small">{ability.description}</span>
     </span>
   );
 }
 
-function SpellRow({ spell, locked }: { spell: (typeof SPELLS)[number]; locked?: boolean }) {
+function AbilityRow({ ability, archetype, locked }: { ability: AbilityInfo; archetype: Archetype; locked?: boolean }) {
   return (
     <li className={locked ? "locked" : undefined}>
-      <SpellText spell={spell} />
-      {locked && <span className="muted small">Lv {spell.level}</span>}
+      <AbilityText ability={ability} archetype={archetype} />
+      {locked && <span className="muted small">Lv {ability.level}</span>}
     </li>
   );
 }

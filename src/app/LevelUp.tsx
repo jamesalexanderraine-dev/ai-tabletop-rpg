@@ -8,19 +8,21 @@ import {
   autoLevelUpChoice,
   availableTraits,
   HP_PER_LEVEL,
-  learnableSpells,
+  abilityNoun,
+  archetypeInfo,
+  ENERGY_PER_LEVEL,
+  learnableAbilities,
   levelUpNeeds,
   MAX_SKILL_RANK,
   MAX_STAT,
-  MP_PER_LEVEL,
   pendingLevelUps,
   SKILLS,
   statInfo,
   type LevelUpChoice,
 } from "@/engine/progression";
-import { formatMod, Pips, SheetFrame, SpellText } from "./Sheet";
+import { AbilityText, formatMod, Pips, SheetFrame } from "./Sheet";
 
-const emptyChoice = (): LevelUpChoice => ({ skills: {}, spell: null, stat: null, trait: null });
+const emptyChoice = (): LevelUpChoice => ({ skills: {}, ability: null, stat: null, trait: null });
 
 // The level-up screen: the storyteller can tap "Choose for me" and carry on,
 // the min-maxer can pore over every pick. The engine validates the result.
@@ -33,7 +35,7 @@ export function LevelUp({ game, onApply, onClose }: { game: GameState; onApply: 
   const c = game.character;
   const spent = Object.values(choice.skills).reduce((a, b) => a + b, 0);
   const left = needs.skillPoints - spent;
-  const complete = left === 0 && (!needs.spell || choice.spell) && (!needs.stat || choice.stat) && (!needs.trait || choice.trait);
+  const complete = left === 0 && (!needs.ability || choice.ability) && (!needs.stat || choice.stat) && (!needs.trait || choice.trait);
 
   function adjust(id: string, delta: number) {
     const current = choice.skills[id] ?? 0;
@@ -57,7 +59,7 @@ export function LevelUp({ game, onApply, onClose }: { game: GameState; onApply: 
   return (
     <SheetFrame title={`Level ${needs.level}`} onClose={onClose}>
       <p className="sheet-line">
-        +{HP_PER_LEVEL} max HP, +{MP_PER_LEVEL} max MP
+        +{HP_PER_LEVEL} max HP, +{ENERGY_PER_LEVEL} max {archetypeInfo(c.archetype).pool === "MP" ? "MP" : "stamina"}
         {pendingLevelUps(game) > 1 && <span className="muted"> · {pendingLevelUps(game) - 1} more level-up after this</span>}
       </p>
       <button type="button" className="auto" onClick={() => setChoice(autoLevelUpChoice(game) ?? emptyChoice())}>
@@ -100,13 +102,13 @@ export function LevelUp({ game, onApply, onClose }: { game: GameState; onApply: 
         </>
       )}
 
-      {needs.spell && (
+      {needs.ability && (
         <>
-          <h3>Learn a spell</h3>
+          <h3>Learn {abilityNoun(c.archetype) === "spell" ? "a spell" : "an ability"}</h3>
           <ul className="rows choices" role="radiogroup">
-            {learnableSpells(game, needs.level).map((s) => (
-              <Choice key={s.id} selected={choice.spell === s.id} onSelect={() => setChoice({ ...choice, spell: s.id })}>
-                <SpellText spell={s} />
+            {learnableAbilities(game, needs.level).map((a) => (
+              <Choice key={a.id} selected={choice.ability === a.id} onSelect={() => setChoice({ ...choice, ability: a.id })}>
+                <AbilityText ability={a} archetype={c.archetype} />
               </Choice>
             ))}
           </ul>

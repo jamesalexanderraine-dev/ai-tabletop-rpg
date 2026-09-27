@@ -10,7 +10,8 @@ import {
   type Roll,
   type Turn,
 } from "@/engine/game";
-import { pendingLevelUps } from "@/engine/progression";
+import { archetypeInfo, pendingLevelUps } from "@/engine/progression";
+import { ArchetypePicker } from "./ArchetypePicker";
 import { DiceRoll } from "./Dice";
 import { LevelUp } from "./LevelUp";
 import { CharacterSheet, Meter } from "./Sheet";
@@ -32,14 +33,15 @@ function scrollToEnd(behavior: ScrollBehavior) {
 }
 
 // Browser saves are a convenience until Milestone 2 moves saves to the server.
-function loadGame(): GameState {
+// Null means there's no game yet, so the player picks an archetype first.
+function loadGame(): GameState | null {
   try {
     const saved = localStorage.getItem(SAVE_KEY);
-    if (saved) return parseGameState(JSON.parse(saved)) ?? newGame();
+    if (saved) return parseGameState(JSON.parse(saved));
   } catch {
     // Unreadable or blocked storage: start fresh.
   }
-  return newGame();
+  return null;
 }
 
 function saveGame(game: GameState) {
@@ -51,7 +53,8 @@ function saveGame(game: GameState) {
 }
 
 export default function Game() {
-  const [game, setGame] = useState<GameState | null>(null);
+  // undefined while loading; null when a new game needs an archetype.
+  const [game, setGame] = useState<GameState | null | undefined>(undefined);
   const [draft, setDraft] = useState("");
   const [live, setLive] = useState<LiveTurn | null>(null);
   const pendingInput = live?.input ?? null;
@@ -67,7 +70,7 @@ export default function Game() {
     if (game) saveGame(game);
   }, [game]);
   // On load, show the latest turn from its first line.
-  const loaded = game !== null;
+  const loaded = game != null;
   useEffect(() => {
     if (loaded) document.querySelector(".story > .turn:last-of-type")?.scrollIntoView({ block: "start" });
   }, [loaded]);
@@ -176,13 +179,19 @@ export default function Game() {
 
   function startOver() {
     if (!confirm("Start a new game? This one will be lost.")) return;
-    setGame(newGame());
+    try {
+      localStorage.removeItem(SAVE_KEY);
+    } catch {
+      // Blocked storage: nothing saved to clear.
+    }
+    setGame(null);
     setError(null);
     setDraft("");
     setOpen(null);
   }
 
-  if (!game) return <main className="game" />;
+  if (game === undefined) return <main className="game" />;
+  if (game === null) return <ArchetypePicker onPick={(archetype) => setGame(newGame(archetype))} />;
   const c = game.character;
   const levelUpsWaiting = pendingLevelUps(game);
 
@@ -194,7 +203,12 @@ export default function Game() {
             {c.name ?? "A stranger"} <span className="lv">Lv {c.level}</span>
           </span>
           <Meter label="Health" value={c.hp} max={c.maxHp} kind="hp" />
-          {c.maxMp > 0 && <Meter label="Magic" value={c.mp} max={c.maxMp} kind="mp" />}
+          <Meter
+            label={archetypeInfo(c.archetype).pool === "MP" ? "Magic" : "Stamina"}
+            value={c.energy}
+            max={c.maxEnergy}
+            kind={archetypeInfo(c.archetype).pool === "MP" ? "mp" : "stamina"}
+          />
           <span className="where">{game.scene.name}</span>
         </div>
         <div className="bar-actions">

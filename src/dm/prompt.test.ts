@@ -1,7 +1,8 @@
 import { describe, expect, it } from "vitest";
 import { DIFFICULTY, STATS } from "@/engine/dice";
 import { SKILLS, STAT_INFO } from "@/engine/progression";
-import { DM_TOOLS, SYSTEM_PROMPT } from "./prompt";
+import { newGame } from "@/engine/game";
+import { buildStateSummary, DM_TOOLS, SYSTEM_PROMPT } from "./prompt";
 
 describe("SYSTEM_PROMPT", () => {
   it("makes a failed roll a real failure, never a success with a cost", () => {
@@ -40,3 +41,21 @@ describe("stat and skill one-liners", () => {
     }
   });
 });
+
+describe("abilities in the prompt", () => {
+  it("charges the same cost whether or not the player names the ability", () => {
+    expect(SYSTEM_PROMPT).toContain("call use_ability, whether or not they name it");
+    expect(SYSTEM_PROMPT).toContain("never supernatural");
+    expect(DM_TOOLS.map((t) => t.name)).toContain("use_ability");
+    expect(DM_TOOLS.map((t) => t.name)).not.toContain("cast_spell");
+  });
+
+  it("tells the DM the archetype, pool and abilities with their costs", () => {
+    const summary = buildStateSummary(newGame("warrior"));
+    expect(summary).toContain("a warrior. Level 1.");
+    expect(summary).toContain("stamina 4/4");
+    expect(summary).toMatch(/Abilities: Feat of Strength \(2 stamina\): Lift, hold or haul/);
+    expect(buildStateSummary(newGame("mage"))).toMatch(/MP 4\/4.*Abilities: Spark \(1 MP\)/s);
+  });
+});
+

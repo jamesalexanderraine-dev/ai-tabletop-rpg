@@ -2,6 +2,16 @@
 
 Short playtest notes, newest first. One entry per task: date, what changed, what felt good or bad, what to try next.
 
+## 2026-09-27: Archetypes and grounded abilities
+
+- New games open on a "Who are you?" screen: Warrior, Rogue or Mage. Each has a 5-point stat spread, two starting skill ranks and a level 1 signature ability that fits the cell: Feat of Strength (bend the bars), Makeshift Disguise (pass as a guard) or Spark (the torch). The opening narration carries a one-line hook per archetype.
+- One ability catalog replaces spells. Mages keep their 12 spells (MP). Warriors and rogues get grounded, never-supernatural abilities that cost stamina, written for creative, story-moving uses outside combat as much as in it. Warrior only: lift and break things beyond normal strength, battle cry, shield another, unbreakable. Rogue only: disguise, charm (Honeyed Words), vanish, forgery, rumours, rooftops, perfect timing. Both: intimidate (Hard Stare), detect lies (Read a Liar), tracking, camp cooking, field medicine, jury-rigging, taming animals.
+- `use_ability` replaces `cast_spell`. The DM must call it whenever the player's action is covered by an ability, named or not, so freeform wording costs the same (docs/UPDATES.md: implicit and explicit use resolve to identical mechanics).
+- MP and stamina are one pool per character, 4 at level 1 and +2 per level; each level-up offers the archetype's own abilities.
+- Older saves become mages: their spells stay valid and Spark is added.
+- Not yet: "Something else" (a generated archetype), and once-per-day cooldowns. Stamina covers the cost for now.
+- Watch on the next playtest: does the DM call use_ability when the player just describes the feat? Are 4 points of stamina at level 1 too tight or too loose? Do the abilities get used outside fights?
+
 ## 2026-09-27: Playtest fixes, part 1 (failure, difficulty, one-liners)
 
 - Source: James's playtest doc, snapshotted as `docs/UPDATES.md`.

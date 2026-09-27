@@ -9,6 +9,7 @@
   --lose: #8a2f22;
   --warn: #9a6a12;
   --magic: #4a5fa8;
+  --stamina: #2f7a6e;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -23,6 +24,7 @@
     --lose: #e58a78;
     --warn: #e2b65c;
     --magic: #93a6ec;
+    --stamina: #7cc9b8;
   }
 }
 
@@ -126,6 +128,10 @@ textarea {
 
 .meter.mp .meter-fill {
   background: var(--magic);
+}
+
+.meter.stamina .meter-fill {
+  background: var(--stamina);
 }
 
 .lv {
@@ -431,6 +437,56 @@ textarea {
   display: block;
   margin-top: 1.4rem;
   color: var(--lose);
+}
+
+.picker {
+  padding: 2.5rem 1rem calc(2rem + env(safe-area-inset-bottom));
+}
+
+.picker h1 {
+  margin: 0 0 0.4rem;
+  font-weight: 400;
+  color: var(--accent);
+}
+
+.archetypes {
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
+  margin-top: 1.4rem;
+}
+
+.archetype {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  padding: 1rem;
+  border: 1px solid var(--rule);
+  border-radius: 0.8rem;
+  background: var(--panel);
+  text-align: left;
+  cursor: pointer;
+}
+
+.archetype:active,
+.archetype:hover {
+  border-color: var(--accent);
+}
+
+.archetype-name {
+  font-size: 1.4rem;
+  font-variant: small-caps;
+  letter-spacing: 0.04em;
+  color: var(--accent);
+}
+
+.archetype-tagline {
+  font-style: italic;
+}
+
+.archetype-detail {
+  font-size: 0.9rem;
+  line-height: 1.4;
 }
 
 .small {

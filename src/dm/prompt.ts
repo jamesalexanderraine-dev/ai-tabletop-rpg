@@ -3,13 +3,14 @@
 
 import { DIFFICULTY, STATS } from "@/engine/dice";
 import { ATTITUDES, capitalize, describeRoll, STORY_SUMMARY_EVERY, type GameState } from "@/engine/game";
-import { MAX_HP_CHANGE, MAX_MP_CHANGE, MAX_XP_GAIN } from "@/engine/tools";
+import { MAX_ENERGY_CHANGE, MAX_HP_CHANGE, MAX_XP_GAIN, poolLabel } from "@/engine/tools";
 import {
   pendingLevelUps,
   SKILLS,
   STAT_INFO,
   skillInfo,
-  spellInfo,
+  abilityInfo,
+  archetypeInfo,
   xpForNextLevel,
 } from "@/engine/progression";
 
@@ -67,7 +68,11 @@ The world is stored in code, not in your memory. You only see a short window of 
 - World facts that should persist (a promise, a door left open, a favour owed): set_flag.
 - Going somewhere new: move_scene, with a short description of the new place.
 - The player's name and who they are: remember (about "name" or "backstory"). Treat their own words about themselves as canon, even when they're silly.
-- Magic: when the player casts a spell they know, call cast_spell (it spends MP), then narrate the effect. They can only cast spells listed in the state. Resting restores MP and HP through update_character.
+- Abilities: the character's archetype (warrior, rogue or mage) gives them abilities, listed in the state with their costs. Mages cast spells, which spend MP. Warriors' and rogues' abilities spend stamina and are never supernatural: narrate them as grit, training, nerve and cunning, even when they let the character do what an ordinary person couldn't (lift a horse, break an iron-bound door, pass for a guard, read a liar at a glance).
+- Whenever the player does something one of their abilities covers, call use_ability, whether or not they name it: "I heave the boulder aside" is Feat of Strength just as much as "I use Feat of Strength". The cost is the same either way, so freeform wording never dodges it. Then narrate the ability doing what it describes; roll only if the outcome is still uncertain beyond that.
+- If they attempt something like an ability they don't have, it's an ordinary attempt at ordinary difficulty (lifting a horse without Feat of Strength is heroic at best).
+- Play abilities for more than fights: they are meant to open creative, story-moving uses (a disguise to get into a ball, a camp meal that loosens a smuggler's tongue, a jury-rigged pulley to raise the portcullis). Reward inventive uses.
+- Resting restores HP, MP and stamina through update_character.
 - Traits are the spice: occasionally, when the story earns it, grant_trait a double-edged trait tailored to what happened (every trait needs a real upside and a real downside). Rarely, not every scene. Bring the character's traits into play, the downsides as well as the upsides.
 
 The stats, what they cover:
@@ -81,7 +86,7 @@ Progression: stats and skills set how the world treats the character even withou
 
 Tone: the world plays it earnest, with light comedy simmering underneath. Mirror the player's level of absurdity: straight if they're straight, gonzo if they push it. Silly choices stick and the world reacts to them with a straight face. Only refuse things that break the fiction (like teleporting to the moon at level 1), and say why in character.
 
-The opening scene: the player has woken in a cell in the dungeons beneath Harrowgate Keep, with no memory of how they were caught and nothing in their pockets. In the cell opposite is Sereth, a sharp-tongued dark elf thief who wants out as badly as they do and will trade help for help. A bored guard, Old Tamsin, patrols with the keys on his belt. Sereth draws the player's identity out of them through conversation: whatever they answer becomes who they are. The scene's natural goal is escape, by any means the player can dream up.`;
+The opening scene: the player, a newly chosen warrior, rogue or mage (see the state), has woken in a cell in the dungeons beneath Harrowgate Keep, with no memory of how they were caught and nothing in their pockets. In the cell opposite is Sereth, a sharp-tongued dark elf thief who wants out as badly as they do and will trade help for help. A bored guard, Old Tamsin, patrols with the keys on his belt. Sereth draws the player's identity out of them through conversation: whatever they answer becomes who they are, within the archetype they picked. The scene's natural goal is escape, by any means the player can dream up, and the cell offers each archetype an obvious first move: a warrior can wrench the old bars, a rogue can work the cheap lock, a mage can call on the torch's flame.`;
 
 const nameProp = { type: "string", description: "Name, as it should appear to the player." };
 
@@ -125,10 +130,13 @@ export const DM_TOOLS = [
   ),
   tool(
     "update_character",
-    "Change the player character's HP, MP, XP or conditions. Include only the fields that change.",
+    "Change the player character's HP, MP or stamina, XP or conditions. Include only the fields that change.",
     {
       hp_change: { type: "integer", description: `Negative for harm, positive for healing (-${MAX_HP_CHANGE} to ${MAX_HP_CHANGE}).` },
-      mp_change: { type: "integer", description: `Magic points restored by rest, or drained (-${MAX_MP_CHANGE} to ${MAX_MP_CHANGE}).` },
+      energy_change: {
+        type: "integer",
+        description: `MP for a mage, stamina for a warrior or rogue: restored by rest or food, or drained (-${MAX_ENERGY_CHANGE} to ${MAX_ENERGY_CHANGE}).`,
+      },
       xp_gain: { type: "integer", description: `XP earned (0 to ${MAX_XP_GAIN}).` },
       add_conditions: { type: "array", items: { type: "string" }, description: "e.g. bleeding, soaked, drunk, disguised." },
       remove_conditions: { type: "array", items: { type: "string" } },
@@ -190,10 +198,10 @@ export const DM_TOOLS = [
     ["summary"],
   ),
   tool(
-    "cast_spell",
-    "Cast one of the player's known spells. Spends its MP cost and returns the spell's effect to narrate.",
-    { spell: { type: "string", description: "The spell's name or id, as listed in the state." } },
-    ["spell"],
+    "use_ability",
+    "Use one of the player's abilities (a mage's spell, or a warrior's or rogue's grounded ability). Call it whenever their action is covered by an ability, named or not. Spends its MP or stamina cost and returns what it does.",
+    { ability: { type: "string", description: "The ability's name or id, as listed in the state." } },
+    ["ability"],
   ),
   tool(
     "grant_trait",
@@ -214,7 +222,7 @@ function list(items: string[], empty: string): string {
 export function buildStateSummary(state: GameState): string {
   const { character: c, stats, inventory, npcs, flags, scene, story } = state;
   const lines = [
-    `Character: ${c.name ?? "name not yet known"}. Level ${c.level}. HP ${c.hp}/${c.maxHp}. MP ${c.mp}/${c.maxMp}. XP ${c.xp}${
+    `Character: ${c.name ?? "name not yet known"}, a ${archetypeInfo(c.archetype).name.toLowerCase()}. Level ${c.level}. HP ${c.hp}/${c.maxHp}. ${poolLabel(c.archetype)} ${c.energy}/${c.maxEnergy}. XP ${c.xp}${
       xpForNextLevel(c.level) === null ? "" : ` (next level at ${xpForNextLevel(c.level)})`
     }. Conditions: ${c.conditions.join(", ") || "none"}.`,
     `Stat modifiers: ${Object.entries(stats)
@@ -226,8 +234,10 @@ export function buildStateSummary(state: GameState): string {
         .map(([id, rank]) => `${skillInfo(id)?.name ?? id} +${rank}`),
       "none trained",
     )}`,
-    `Spells known: ${list(
-      c.spells.map((id) => spellInfo(id)).flatMap((sp) => (sp ? [`${sp.name} (${sp.cost} MP): ${sp.description}`] : [])),
+    `Abilities: ${list(
+      c.abilities
+        .map((id) => abilityInfo(id))
+        .flatMap((a) => (a ? [`${a.name} (${a.cost} ${poolLabel(c.archetype)}): ${a.description}`] : [])),
       "none",
     )}`,
     `Traits: ${list(c.traits.map((t) => `${t.name}: ${t.upside} But: ${t.downside}`), "none")}`,
