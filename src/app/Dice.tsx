@@ -6,7 +6,7 @@ import { skillInfo } from "@/engine/progression";
 
 // The spin always lasts about this long, even when the result is already known,
 // so every check gets its moment of suspense.
-const SPIN_MS = 1600;
+const SPIN_MS = 2400;
 
 // A random face that differs from the one showing, so every tick visibly changes.
 function otherFace(current: number): number {
@@ -43,12 +43,12 @@ export function DiceRoll({ roll, animate = false, onLanded }: { roll: Roll; anim
       // Ticks start fast and slow down, like a die running out of momentum.
       let elapsed = 0;
       for (let tick = 0; elapsed < SPIN_MS; tick++) {
-        elapsed += 45 + tick * tick * 1.6;
+        elapsed += 68 + tick * tick * 2.4;
         timers.push(
           setTimeout(() => setFace(otherFace), Math.min(elapsed, SPIN_MS)),
         );
       }
-      timers.push(setTimeout(land, SPIN_MS + 120));
+      timers.push(setTimeout(land, SPIN_MS + 180));
     }
     return () => timers.forEach(clearTimeout);
   }, [animate, roll.roll]);

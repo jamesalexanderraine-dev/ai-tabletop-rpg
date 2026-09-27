@@ -245,16 +245,16 @@ textarea {
 
 .roll.rolling .die {
   background: var(--muted);
-  animation: tumble 0.25s linear infinite;
+  animation: tumble 0.375s linear infinite;
 }
 
 .roll.win .die,
 .roll.lose .die {
-  animation: land 0.35s ease-out;
+  animation: land 0.525s ease-out;
 }
 
 .roll.crit .die {
-  animation: land 0.35s ease-out, crit 1.2s ease-in-out 0.35s 2;
+  animation: land 0.525s ease-out, crit 1.8s ease-in-out 0.525s 2;
 }
 
 @keyframes tumble {
