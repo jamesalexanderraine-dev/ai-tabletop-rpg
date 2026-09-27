@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import { parseGameState, validatePlayerInput } from "@/engine/game";
 import { createClaudeDm, DmRefusalError } from "@/dm/claude";
 import { dmModel, hasAnthropicKey } from "@/dm/config";
+import { turnEventStream } from "@/dm/stream";
 import { playTurn } from "@/dm/turn";
 
 // A turn is a few model calls when the DM rolls dice, so give it room.
@@ -36,30 +37,36 @@ export async function POST(request: Request) {
   const playerInput = validatePlayerInput(input);
   if (!playerInput.ok) return error(400, playerInput.error);
 
-  try {
-    const result = await playTurn(state, playerInput.value, createClaudeDm());
-    return NextResponse.json(result);
-  } catch (err) {
-    if (err instanceof DmRefusalError) {
-      return error(422, "The DM wouldn't run that one. Try putting it another way.");
-    }
-    if (err instanceof Anthropic.RateLimitError) {
-      return error(429, "The DM is catching their breath (rate limited). Try again in a moment.");
-    }
-    if (err instanceof Anthropic.APIError) {
-      // Anthropic's own reason, which never includes the key, so problems can be
-      // diagnosed from the phone without digging through Vercel logs.
-      const reason = apiReason(err);
-      console.error("DM API error", err.status, reason);
-      if (err instanceof Anthropic.AuthenticationError) {
-        return error(502, `Anthropic didn't accept the API key (401: ${reason}).`);
-      }
-      if (err instanceof Anthropic.PermissionDeniedError) {
-        return error(502, `The API key isn't allowed to use ${dmModel()} (403: ${reason}).`);
-      }
-      return error(502, `The DM stumbled (${err.status ?? "network"} error: ${reason}). Try again.`);
-    }
-    console.error("DM turn failed", err);
-    return error(500, "Something went wrong running that turn. Try again.");
+  // Validation errors above are plain JSON; from here on the turn streams.
+  const stream = turnEventStream(
+    (events) => playTurn(state, playerInput.value, createClaudeDm(), Math.random, events),
+    describeError,
+  );
+  return new Response(stream, {
+    headers: {
+      "Content-Type": "application/x-ndjson; charset=utf-8",
+      "Cache-Control": "no-cache, no-transform",
+      "X-Accel-Buffering": "no",
+    },
+  });
+}
+
+function describeError(err: unknown): string {
+  if (err instanceof DmRefusalError) return "The DM wouldn't run that one. Try putting it another way.";
+  if (err instanceof Anthropic.RateLimitError) {
+    return "The DM is catching their breath (rate limited). Try again in a moment.";
   }
+  if (err instanceof Anthropic.APIError) {
+    // Anthropic's own reason, which never includes the key, so problems can be
+    // diagnosed from the phone without digging through Vercel logs.
+    const reason = apiReason(err);
+    console.error("DM API error", err.status, reason);
+    if (err instanceof Anthropic.AuthenticationError) return `Anthropic didn't accept the API key (401: ${reason}).`;
+    if (err instanceof Anthropic.PermissionDeniedError) {
+      return `The API key isn't allowed to use ${dmModel()} (403: ${reason}).`;
+    }
+    return `The DM stumbled (${err.status ?? "network"} error: ${reason}). Try again.`;
+  }
+  console.error("DM turn failed", err);
+  return "Something went wrong running that turn. Try again.";
 }

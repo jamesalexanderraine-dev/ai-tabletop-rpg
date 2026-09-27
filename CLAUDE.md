@@ -33,4 +33,4 @@ A single-player RPG where an LLM Dungeon Master improvises story and rulings on 
 
 ## Current milestone
 
-Milestones 0 to 2 are merged: the DM loop with dice and code-owned state (items, HP, NPCs, flags, scenes) is playable on Vercel. Saves are still in the browser; moving them to a server database is a deferred part of Milestone 2 that needs a database set up in Vercel. Milestone 3 (leveling, skills, spells, traits and the character sheet) is in progress. Next is Milestone 4: generated portraits and scene art.
+Milestones 0 to 2 are merged: the DM loop with dice and code-owned state (items, HP, NPCs, flags, scenes) is playable on Vercel. Saves are still in the browser; moving them to a server database is a deferred part of Milestone 2 that needs a database set up in Vercel. Milestone 3 (leveling, skills, spells, traits and the character sheet) is merged. Turns stream to the browser (`src/dm/stream.ts`) so dice roll while the DM writes. Next is Milestone 4: generated portraits and scene art.

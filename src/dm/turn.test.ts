@@ -110,4 +110,14 @@ describe("playTurn", () => {
     expect(after.seen.input?.stateSummary).toContain("Story so far (as of turn 10): Bramble has been pacing the cell.");
     expect(after.seen.input?.stateSummary).not.toContain("summary is due");
   });
+
+  it("reports each roll the moment the engine makes it, but not rejected ones", async () => {
+    const seenRolls: number[] = [];
+    const { dm } = stubDm([
+      ["roll_check", { stat: "might", difficulty: "hard", reason: "shoulder the door" }],
+      ["roll_check", { stat: "charm", difficulty: "easy", reason: "bad stat" }],
+    ]);
+    await playTurn(newGame(), "I shoulder the door", dm, face(12), { onRoll: (r) => seenRolls.push(r.roll) });
+    expect(seenRolls).toEqual([12]);
+  });
 });

@@ -1,26 +1,28 @@
 import type Anthropic from "@anthropic-ai/sdk";
 import { describe, expect, it } from "vitest";
-import { buildMessages, createClaudeDm, DmRefusalError, type CreateMessage } from "./claude";
+import { buildMessages, createClaudeDm, DmRefusalError, type SendMessage } from "./claude";
 import type { DmTurnInput } from "./types";
 
 type Message = Anthropic.Beta.Messages.BetaMessage;
-type Params = Parameters<CreateMessage>[0];
+type Params = Parameters<SendMessage>[0];
 
 // Builds just enough of a Messages API response for the loop to read.
 function reply(stop_reason: Message["stop_reason"], content: unknown[]): Message {
   return { stop_reason, content } as unknown as Message;
 }
 
-// A fake API that returns the scripted responses in order and records each request.
+// A fake API that "streams" each scripted response's text, returns them in order
+// and records each request.
 function fakeApi(responses: Message[]) {
   const requests: Params[] = [];
-  const create: CreateMessage = async (params) => {
+  const send: SendMessage = async (params, onText) => {
     requests.push(structuredClone(params));
     const next = responses.shift();
     if (!next) throw new Error("No more scripted responses");
+    for (const block of next.content) if (block.type === "text") onText(block.text);
     return next;
   };
-  return { create, requests };
+  return { send, requests };
 }
 
 const input: DmTurnInput = {
@@ -48,7 +50,7 @@ describe("createClaudeDm", () => {
       reply("end_turn", [{ type: "text", text: "The hinges scream and give way." }]),
     ]);
     const toolCalls: Array<[string, unknown]> = [];
-    const dm = createClaudeDm({ create: api.create, model: "claude-opus-5" });
+    const dm = createClaudeDm({ send: api.send, model: "claude-opus-5" });
 
     const narration = await dm.narrate(input, (name, args) => {
       toolCalls.push([name, args]);
@@ -69,7 +71,7 @@ describe("createClaudeDm", () => {
       reply("tool_use", [{ type: "tool_use", id: "t1", name: "roll_check", input: { stat: "charm" } }]),
       reply("end_turn", [{ type: "text", text: "You flash a winning smile." }]),
     ]);
-    const dm = createClaudeDm({ create: api.create, model: "claude-opus-5" });
+    const dm = createClaudeDm({ send: api.send, model: "claude-opus-5" });
     await dm.narrate(input, () => ({ content: "Unknown stat", isError: true }));
     const last = api.requests[1]?.messages.at(-1)?.content;
     expect(last).toEqual([expect.objectContaining({ is_error: true, content: "Unknown stat" })]);
@@ -81,7 +83,7 @@ describe("createClaudeDm", () => {
       ["claude-sonnet-5", false],
     ] as const) {
       const api = fakeApi([reply("end_turn", [{ type: "text", text: "Hi." }])]);
-      await createClaudeDm({ create: api.create, model }).narrate(input, () => ({ content: "", isError: false }));
+      await createClaudeDm({ send: api.send, model }).narrate(input, () => ({ content: "", isError: false }));
       expect(api.requests[0]?.model).toBe(model);
       expect("fallbacks" in (api.requests[0] ?? {})).toBe(expected);
     }
@@ -89,14 +91,38 @@ describe("createClaudeDm", () => {
 
   it("raises a refusal instead of returning empty narration", async () => {
     const api = fakeApi([reply("refusal", [])]);
-    const dm = createClaudeDm({ create: api.create, model: "claude-opus-5" });
+    const dm = createClaudeDm({ send: api.send, model: "claude-opus-5" });
     await expect(dm.narrate(input, () => ({ content: "", isError: false }))).rejects.toBeInstanceOf(DmRefusalError);
   });
 
   it("gives up on an endless tool loop", async () => {
     const loop = () => reply("tool_use", [{ type: "tool_use", id: "t", name: "remember", input: {} }]);
     const api = fakeApi(Array.from({ length: 10 }, loop));
-    const dm = createClaudeDm({ create: api.create, model: "claude-opus-5" });
+    const dm = createClaudeDm({ send: api.send, model: "claude-opus-5" });
     await expect(dm.narrate(input, () => ({ content: "Saved.", isError: false }))).rejects.toThrow(/loop/);
+  });
+
+  it("streams the narration and discards a preamble written before a tool call", async () => {
+    const api = fakeApi([
+      reply("tool_use", [
+        { type: "text", text: "Let me roll for that." },
+        { type: "tool_use", id: "t1", name: "roll_check", input: {} },
+      ]),
+      reply("end_turn", [{ type: "text", text: "The lock gives." }]),
+    ]);
+    const events: string[] = [];
+    const dm = createClaudeDm({ send: api.send, model: "claude-opus-5" });
+    const narration = await dm.narrate(input, () => ({ content: "ok", isError: false }), {
+      onText: (d) => events.push(`text:${d}`),
+      onDiscardText: () => events.push("discard"),
+    });
+    expect(events).toEqual(["text:Let me roll for that.", "discard", "text:The lock gives."]);
+    expect(narration).toBe("The lock gives.");
+  });
+
+  it("caches the system prompt so it isn't paid for in full every turn", async () => {
+    const api = fakeApi([reply("end_turn", [{ type: "text", text: "Hi." }])]);
+    await createClaudeDm({ send: api.send, model: "claude-opus-5" }).narrate(input, () => ({ content: "", isError: false }));
+    expect(api.requests[0]?.system).toEqual([expect.objectContaining({ cache_control: { type: "ephemeral" } })]);
   });
 });

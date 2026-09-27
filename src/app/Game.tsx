@@ -2,7 +2,6 @@
 
 import { useEffect, useRef, useState, type FormEvent, type KeyboardEvent } from "react";
 import {
-  capitalize,
   MAX_PLAYER_INPUT_LENGTH,
   type Change,
   newGame,
@@ -11,11 +10,26 @@ import {
   type Roll,
   type Turn,
 } from "@/engine/game";
-import { pendingLevelUps, skillInfo } from "@/engine/progression";
+import { pendingLevelUps } from "@/engine/progression";
+import { DiceRoll } from "./Dice";
 import { LevelUp } from "./LevelUp";
 import { CharacterSheet, Meter } from "./Sheet";
+import { readTurnEvents } from "./turnStream";
 
 const SAVE_KEY = "aidm.game.v1";
+
+function distanceFromEnd(): number {
+  const page = document.scrollingElement ?? document.documentElement;
+  return page.scrollHeight - page.scrollTop - window.innerHeight;
+}
+
+// Scroll to the very end of the page, where the story sits just above the input
+// bar. (Lining the story's end up with the bottom of the screen would leave the
+// newest line hidden behind the bar, which is pinned over that strip.)
+function scrollToEnd(behavior: ScrollBehavior) {
+  const page = document.scrollingElement ?? document.documentElement;
+  requestAnimationFrame(() => window.scrollTo({ top: page.scrollHeight, behavior }));
+}
 
 // Browser saves are a convenience until Milestone 2 moves saves to the server.
 function loadGame(): GameState {
@@ -39,26 +53,73 @@ function saveGame(game: GameState) {
 export default function Game() {
   const [game, setGame] = useState<GameState | null>(null);
   const [draft, setDraft] = useState("");
-  const [pendingInput, setPendingInput] = useState<string | null>(null);
+  const [live, setLive] = useState<LiveTurn | null>(null);
+  const pendingInput = live?.input ?? null;
   const [error, setError] = useState<string | null>(null);
   const [open, setOpen] = useState<"sheet" | "levelup" | null>(null);
-  const bottomRef = useRef<HTMLDivElement>(null);
+  // Whether the page should keep following the newest content, like a chat reply.
+  // Scrolling up to reread turns it off; scrolling back to the end turns it on.
+  const following = useRef(true);
   const inputRef = useRef<HTMLTextAreaElement>(null);
 
   useEffect(() => setGame(loadGame()), []);
   useEffect(() => {
     if (game) saveGame(game);
   }, [game]);
-  // Show a new reply from its first line, so a long one reads top to bottom.
-  const turnCount = game?.turns.length ?? 0;
+  // On load, show the latest turn from its first line.
+  const loaded = game !== null;
   useEffect(() => {
-    if (turnCount > 1) {
-      document.querySelector(".story > .turn:last-of-type")?.scrollIntoView({ block: "start", behavior: "smooth" });
+    if (loaded) document.querySelector(".story > .turn:last-of-type")?.scrollIntoView({ block: "start" });
+  }, [loaded]);
+  useEffect(() => {
+    // Only the player's own scrolling (a touch or a mouse wheel, until the page
+    // settles) changes whether we follow. The page's own smooth scrolls pass
+    // through positions that would otherwise switch it off.
+    let playerScrolling = false;
+    let settle: ReturnType<typeof setTimeout> | undefined;
+    const onGesture = () => {
+      playerScrolling = true;
+    };
+    const onScroll = () => {
+      if (!playerScrolling) return;
+      following.current = distanceFromEnd() < 80;
+      clearTimeout(settle);
+      settle = setTimeout(() => {
+        playerScrolling = false;
+      }, 200);
+    };
+    const opts = { passive: true };
+    window.addEventListener("touchstart", onGesture, opts);
+    window.addEventListener("wheel", onGesture, opts);
+    window.addEventListener("scroll", onScroll, opts);
+    return () => {
+      clearTimeout(settle);
+      window.removeEventListener("touchstart", onGesture);
+      window.removeEventListener("wheel", onGesture);
+      window.removeEventListener("scroll", onScroll);
+    };
+  }, []);
+  // While a turn plays out, follow it down the page as dice arrive and land and
+  // text comes in, unless the player has scrolled up to read.
+  const shownText = live && live.landed >= live.rolls.length ? live.text.length : 0;
+  useEffect(() => {
+    if (!pendingInput) return;
+    following.current = true;
+    scrollToEnd("smooth");
+  }, [pendingInput]);
+  useEffect(() => {
+    if (following.current && (live || error)) scrollToEnd("smooth");
+  }, [live?.rolls.length, live?.landed, error]);
+  useEffect(() => {
+    if (following.current && shownText) scrollToEnd("auto");
+  }, [shownText]);
+  // The finished turn replaces the live one once every die has landed.
+  useEffect(() => {
+    if (live?.result && live.landed >= live.rolls.length) {
+      setGame(live.result);
+      setLive(null);
     }
-  }, [turnCount]);
-  useEffect(() => {
-    if (pendingInput || error) bottomRef.current?.scrollIntoView({ block: "end", behavior: "smooth" });
-  }, [pendingInput, error]);
+  }, [live]);
 
   function resizeInput() {
     const el = inputRef.current;
@@ -70,26 +131,39 @@ export default function Game() {
   async function send(event?: FormEvent) {
     event?.preventDefault();
     const input = draft.trim();
-    if (!game || !input || pendingInput) return;
-    setPendingInput(input);
+    if (!game || !input || live) return;
+    setLive({ input, rolls: [], landed: 0, text: "", result: null });
     setDraft("");
     setError(null);
     requestAnimationFrame(resizeInput);
+    const update = (fn: (l: LiveTurn) => LiveTurn) => setLive((l) => (l ? fn(l) : l));
     try {
       const response = await fetch("/api/turn", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ state: game, input }),
       });
-      const data = (await response.json().catch(() => ({}))) as { state?: GameState; error?: string };
-      if (!response.ok || !data.state) throw new Error(data.error ?? "The DM didn't answer. Try again.");
-      setGame(data.state);
+      if (!response.ok) {
+        const data = (await response.json().catch(() => ({}))) as { error?: string };
+        throw new Error(data.error ?? "The DM didn't answer. Try again.");
+      }
+      let finished = false;
+      await readTurnEvents(response, (e) => {
+        if (e.type === "roll") update((l) => ({ ...l, rolls: [...l.rolls, e.roll] }));
+        else if (e.type === "text") update((l) => ({ ...l, text: l.text + e.delta }));
+        else if (e.type === "discard") update((l) => ({ ...l, text: "" }));
+        else if (e.type === "error") throw new Error(e.error);
+        else if (e.type === "done") {
+          finished = true;
+          update((l) => ({ ...l, text: e.turn.narration, result: e.state }));
+        }
+      });
+      if (!finished) throw new Error("The DM's reply was cut off. Try again.");
     } catch (err) {
+      setLive(null);
       setError(err instanceof Error ? err.message : "The DM didn't answer. Try again.");
       setDraft(input);
       requestAnimationFrame(resizeInput);
-    } finally {
-      setPendingInput(null);
     }
   }
 
@@ -139,18 +213,12 @@ export default function Game() {
         {game.turns.map((turn, i) => (
           <TurnView key={i} turn={turn} first={i === 0} />
         ))}
-        {pendingInput && (
-          <section className="turn">
-            <p className="player">{pendingInput}</p>
-            <p className="thinking">The DM considers this…</p>
-          </section>
-        )}
+        {live && <LiveTurnView live={live} onLanded={() => setLive((l) => (l ? { ...l, landed: l.landed + 1 } : l))} />}
         {error && (
           <p className="error" role="alert">
             {error}
           </p>
         )}
-        <div ref={bottomRef} />
       </div>
 
       <form className="compose" onSubmit={send}>
@@ -186,7 +254,7 @@ function TurnView({ turn, first }: { turn: Turn; first: boolean }) {
     <section className="turn">
       {turn.player && <p className="player">{turn.player}</p>}
       {turn.rolls.map((roll, i) => (
-        <RollChip key={i} roll={roll} />
+        <DiceRoll key={i} roll={roll} />
       ))}
       <div className={first ? "narration opening" : "narration"}>
         {turn.narration.split(/\n\s*\n/).map((para, i) => (
@@ -201,37 +269,6 @@ function TurnView({ turn, first }: { turn: Turn; first: boolean }) {
         </ul>
       )}
     </section>
-  );
-}
-
-function RollChip({ roll }: { roll: Roll }) {
-  const mods = roll.statModifier + roll.skillBonus + roll.situationalBonus;
-  const skill = roll.skill ? skillInfo(roll.skill)?.name : null;
-  const outcome =
-    roll.critical === "success"
-      ? "Critical success"
-      : roll.critical === "failure"
-        ? "Critical failure"
-        : roll.success
-          ? "Success"
-          : "Failure";
-  return (
-    <p className={`roll ${roll.success ? "win" : "lose"}`}>
-      <span className="die" aria-hidden>
-        {roll.roll}
-      </span>
-      <span>
-        <strong>
-          {capitalize(roll.stat)}
-          {skill && ` (${skill})`}
-        </strong>{" "}
-        · {roll.reason}
-        <br />
-        <span className="math">
-          {roll.roll} {mods >= 0 ? "+" : "−"} {Math.abs(mods)} = {roll.total} vs {roll.target} · {outcome}
-        </span>
-      </span>
-    </p>
   );
 }
 
@@ -250,5 +287,37 @@ function ChangeNote({ change }: { change: Change }) {
     <li className={`change ${change.kind}`}>
       <span aria-hidden>{CHANGE_GLYPHS[change.kind]}</span> {change.text}
     </li>
+  );
+}
+
+// A turn still being played out: dice tumble as the engine rolls them, and the
+// narration appears (as it's written) only once every die has landed.
+interface LiveTurn {
+  input: string;
+  rolls: Roll[];
+  landed: number;
+  text: string;
+  result: GameState | null;
+}
+
+function LiveTurnView({ live, onLanded }: { live: LiveTurn; onLanded: () => void }) {
+  const diceSettled = live.landed >= live.rolls.length;
+  const text = diceSettled ? live.text.trim() : "";
+  return (
+    <section className="turn">
+      <p className="player">{live.input}</p>
+      {live.rolls.map((roll, i) => (
+        <DiceRoll key={i} roll={roll} animate onLanded={onLanded} />
+      ))}
+      {text ? (
+        <div className="narration">
+          {text.split(/\n\s*\n/).map((para, i) => (
+            <p key={i}>{para}</p>
+          ))}
+        </div>
+      ) : (
+        diceSettled && <p className="thinking">{live.rolls.length ? "The DM weighs the result…" : "The DM considers this…"}</p>
+      )}
+    </section>
   );
 }

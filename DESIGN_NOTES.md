@@ -2,6 +2,16 @@
 
 Short playtest notes, newest first. One entry per task: date, what changed, what felt good or bad, what to try next.
 
+## 2026-09-27: Rolling dice while the DM writes
+
+- Turns now stream to the browser as events: each roll the moment the engine makes it, the narration as the DM writes it, then the finished turn. The check still comes from the DM's own `roll_check` call, so one model makes every ruling.
+- The die tumbles for about 2.4 seconds (slowing down) before landing on the real result, even when the result is already known. Narration waits until every die has landed, so the outcome is never spoiled. Crits get a pop and a glow. Reduced-motion settings skip the spin.
+- In a scripted test with realistic delays: the die appears as soon as the roll arrives (0.8s in the script), lands about 2.6s later, and the text follows straight after. (Slowed by 50% after the first playtest, from 1.6s to 2.4s of spin.)
+- Token usage and an estimated cost are now logged for every turn (Vercel logs, "DM turn usage"), and the system prompt is marked for caching across turns.
+- Considered and deferred: a small, fast model that picks the check before the DM runs. It would show the die a little sooner but adds a call to every turn and lets two models disagree about rulings. Revisit if real turns show the die appearing too late.
+- Playtest fix: the die spun hidden behind the input bar, and scrolling down to it got pulled back. The page was lining the end of the story up with the bottom of the screen, which the pinned input bar covers, and re-scrolling on every update. It now follows to the true end of the page, like a chat reply, and stops following while the player scrolls up to read.
+- Watch on the first real playtest: how long before the die appears on a real turn? Does the text feel like it's typing out after the die lands, or arriving all at once?
+
 ## 2026-09-27: Milestone 3, leveling, skills, spells and traits
 
 - Levels come from XP (level 2 at 50, 3 at 120, then steeper, up to 10). Each level: +3 max HP and MP, 2 skill points, one new spell; a stat raise on even levels and a double-edged trait on odd levels from 3. Every pick is validated in `src/engine/progression.ts`, and the server re-checks that a saved build is legal for its level.
