@@ -18,6 +18,19 @@ import { readTurnEvents } from "./turnStream";
 
 const SAVE_KEY = "aidm.game.v1";
 
+function distanceFromEnd(): number {
+  const page = document.scrollingElement ?? document.documentElement;
+  return page.scrollHeight - page.scrollTop - window.innerHeight;
+}
+
+// Scroll to the very end of the page, where the story sits just above the input
+// bar. (Lining the story's end up with the bottom of the screen would leave the
+// newest line hidden behind the bar, which is pinned over that strip.)
+function scrollToEnd(behavior: ScrollBehavior) {
+  const page = document.scrollingElement ?? document.documentElement;
+  requestAnimationFrame(() => window.scrollTo({ top: page.scrollHeight, behavior }));
+}
+
 // Browser saves are a convenience until Milestone 2 moves saves to the server.
 function loadGame(): GameState {
   try {
@@ -44,7 +57,9 @@ export default function Game() {
   const pendingInput = live?.input ?? null;
   const [error, setError] = useState<string | null>(null);
   const [open, setOpen] = useState<"sheet" | "levelup" | null>(null);
-  const bottomRef = useRef<HTMLDivElement>(null);
+  // Whether the page should keep following the newest content, like a chat reply.
+  // Scrolling up to reread turns it off; scrolling back to the end turns it on.
+  const following = useRef(true);
   const inputRef = useRef<HTMLTextAreaElement>(null);
 
   useEffect(() => setGame(loadGame()), []);
@@ -56,11 +71,48 @@ export default function Game() {
   useEffect(() => {
     if (loaded) document.querySelector(".story > .turn:last-of-type")?.scrollIntoView({ block: "start" });
   }, [loaded]);
-  // While a turn plays out, follow it down the page as dice land and text arrives.
+  useEffect(() => {
+    // Only the player's own scrolling (a touch or a mouse wheel, until the page
+    // settles) changes whether we follow. The page's own smooth scrolls pass
+    // through positions that would otherwise switch it off.
+    let playerScrolling = false;
+    let settle: ReturnType<typeof setTimeout> | undefined;
+    const onGesture = () => {
+      playerScrolling = true;
+    };
+    const onScroll = () => {
+      if (!playerScrolling) return;
+      following.current = distanceFromEnd() < 80;
+      clearTimeout(settle);
+      settle = setTimeout(() => {
+        playerScrolling = false;
+      }, 200);
+    };
+    const opts = { passive: true };
+    window.addEventListener("touchstart", onGesture, opts);
+    window.addEventListener("wheel", onGesture, opts);
+    window.addEventListener("scroll", onScroll, opts);
+    return () => {
+      clearTimeout(settle);
+      window.removeEventListener("touchstart", onGesture);
+      window.removeEventListener("wheel", onGesture);
+      window.removeEventListener("scroll", onScroll);
+    };
+  }, []);
+  // While a turn plays out, follow it down the page as dice arrive and land and
+  // text comes in, unless the player has scrolled up to read.
   const shownText = live && live.landed >= live.rolls.length ? live.text.length : 0;
   useEffect(() => {
-    if (pendingInput || error) bottomRef.current?.scrollIntoView({ block: "end", behavior: "smooth" });
-  }, [pendingInput, error, live?.rolls.length, live?.landed, shownText]);
+    if (!pendingInput) return;
+    following.current = true;
+    scrollToEnd("smooth");
+  }, [pendingInput]);
+  useEffect(() => {
+    if (following.current && (live || error)) scrollToEnd("smooth");
+  }, [live?.rolls.length, live?.landed, error]);
+  useEffect(() => {
+    if (following.current && shownText) scrollToEnd("auto");
+  }, [shownText]);
   // The finished turn replaces the live one once every die has landed.
   useEffect(() => {
     if (live?.result && live.landed >= live.rolls.length) {
@@ -167,7 +219,6 @@ export default function Game() {
             {error}
           </p>
         )}
-        <div ref={bottomRef} />
       </div>
 
       <form className="compose" onSubmit={send}>
