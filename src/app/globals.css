@@ -8,6 +8,7 @@
   --win: #3f6b35;
   --lose: #8a2f22;
   --warn: #9a6a12;
+  --magic: #4a5fa8;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -21,6 +22,7 @@
     --win: #9cc48a;
     --lose: #e58a78;
     --warn: #e2b65c;
+    --magic: #93a6ec;
   }
 }
 
@@ -73,7 +75,7 @@ textarea {
   color: var(--accent);
 }
 
-.vitals {
+.status {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
@@ -91,7 +93,7 @@ textarea {
   text-overflow: ellipsis;
 }
 
-.hp {
+.meter {
   display: inline-flex;
   align-items: center;
   gap: 0.35rem;
@@ -99,27 +101,61 @@ textarea {
   font-variant-numeric: tabular-nums;
 }
 
-.hp-track {
-  width: 4.5rem;
+.meter-track {
+  width: 3.6rem;
   height: 0.45rem;
   border-radius: 1rem;
   background: var(--rule);
   overflow: hidden;
 }
 
-.hp-fill {
+.meter-fill {
   display: block;
   height: 100%;
   background: var(--win);
   transition: width 0.4s ease;
 }
 
-.hp.hurt .hp-fill {
+.meter.hurt .meter-fill {
   background: var(--warn);
 }
 
-.hp.dire .hp-fill {
+.meter.dire .meter-fill {
   background: var(--lose);
+}
+
+.meter.mp .meter-fill {
+  background: var(--magic);
+}
+
+.lv {
+  font-variant: normal;
+  font-size: 0.8rem;
+  color: var(--muted);
+}
+
+.bar-actions {
+  flex: none;
+  display: flex;
+  gap: 0.4rem;
+  align-items: center;
+}
+
+.levelup-button {
+  padding: 0.3rem 0.8rem;
+  border: 0;
+  border-radius: 1rem;
+  background: var(--accent);
+  color: var(--bg);
+  font-weight: 700;
+  cursor: pointer;
+  animation: glow 2s ease-in-out infinite;
+}
+
+@keyframes glow {
+  50% {
+    box-shadow: 0 0 0 0.3rem color-mix(in srgb, var(--accent) 25%, transparent);
+  }
 }
 
 .pack-button {
@@ -242,6 +278,11 @@ textarea {
   color: var(--win);
 }
 
+.change.spell span,
+.change.trait span {
+  color: var(--magic);
+}
+
 .sheet-backdrop {
   position: fixed;
   inset: 0;
@@ -351,6 +392,167 @@ textarea {
   color: var(--lose);
 }
 
+.small {
+  font-size: 0.85rem;
+}
+
+.tabs {
+  display: flex;
+  gap: 0.3rem;
+  margin: 0.6rem 0 0.4rem;
+  overflow-x: auto;
+}
+
+.tab {
+  flex: none;
+  padding: 0.3rem 0.8rem;
+  border: 1px solid var(--rule);
+  border-radius: 1rem;
+  background: none;
+  color: var(--muted);
+  cursor: pointer;
+}
+
+.tab.on {
+  background: var(--ink);
+  border-color: var(--ink);
+  color: var(--bg);
+}
+
+.rows {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.rows li {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.8rem;
+  padding: 0.5rem 0;
+  border-bottom: 1px solid var(--rule);
+}
+
+.rows li.locked {
+  opacity: 0.55;
+}
+
+.pips {
+  display: inline-flex;
+  gap: 0.2rem;
+  vertical-align: middle;
+}
+
+.pip {
+  width: 0.55rem;
+  height: 0.55rem;
+  border-radius: 50%;
+  border: 1px solid var(--muted);
+}
+
+.pip.on {
+  background: var(--accent);
+  border-color: var(--accent);
+}
+
+.search {
+  width: 100%;
+  margin: 0.4rem 0;
+  padding: 0.5rem 0.7rem;
+  border: 1px solid var(--rule);
+  border-radius: 0.6rem;
+  background: var(--panel);
+  color: var(--ink);
+  font: inherit;
+  font-size: 1rem;
+}
+
+.count {
+  float: right;
+  letter-spacing: normal;
+  text-transform: none;
+  color: var(--accent);
+}
+
+.stepper {
+  flex: none;
+  display: flex;
+  gap: 0.4rem;
+}
+
+.stepper button,
+.stat-pick,
+.auto,
+.confirm {
+  border: 1px solid var(--rule);
+  border-radius: 0.6rem;
+  background: var(--panel);
+  cursor: pointer;
+}
+
+.stepper button {
+  width: 2.4rem;
+  height: 2.4rem;
+  font-size: 1.2rem;
+}
+
+.stepper button:disabled,
+.stat-pick:disabled,
+.confirm:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+
+.rows li.picked {
+  background: color-mix(in srgb, var(--accent) 8%, transparent);
+}
+
+.choices li {
+  padding: 0.55rem 0.6rem;
+  border: 1px solid var(--rule);
+  border-radius: 0.6rem;
+  margin-bottom: 0.4rem;
+  cursor: pointer;
+}
+
+.choices li[aria-checked="true"] {
+  border-color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 10%, transparent);
+}
+
+.stat-picks {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.4rem;
+}
+
+.stat-pick {
+  padding: 0.5rem 0.3rem;
+  line-height: 1.3;
+}
+
+.stat-pick.on {
+  border-color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 12%, transparent);
+}
+
+.auto {
+  margin-top: 0.4rem;
+  padding: 0.4rem 0.9rem;
+}
+
+.confirm {
+  display: block;
+  width: 100%;
+  margin-top: 1rem;
+  padding: 0.75rem;
+  border: 0;
+  background: var(--accent);
+  color: var(--bg);
+  font-weight: 700;
+}
+
 .thinking {
   color: var(--muted);
   font-style: italic;
@@ -410,7 +612,8 @@ textarea {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .thinking {
+  .thinking,
+  .levelup-button {
     animation: none;
   }
 }
