@@ -185,13 +185,7 @@ textarea {
 .turn {
   margin-bottom: 1.4rem;
   /* Clears the sticky header when a new turn scrolls into view. */
-  scroll-margin-top: 7rem;
-}
-
-/* The newest turn always has room below it, so it can be scrolled up under the
-   header even early in a game, keeping the dice clear of the keyboard. */
-.story > .turn:last-of-type {
-  min-height: calc(100dvh - 12rem);
+  scroll-margin-top: 6rem;
 }
 
 .narration p {

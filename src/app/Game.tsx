@@ -44,32 +44,23 @@ export default function Game() {
   const pendingInput = live?.input ?? null;
   const [error, setError] = useState<string | null>(null);
   const [open, setOpen] = useState<"sheet" | "levelup" | null>(null);
+  const bottomRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
-  const firstLoad = useRef(true);
 
   useEffect(() => setGame(loadGame()), []);
   useEffect(() => {
     if (game) saveGame(game);
   }, [game]);
-  // Pin the newest turn just under the header: on load, when a move is sent, and
-  // when an error appears. The top of the screen stays visible even with the
-  // on-screen keyboard open, so the dice and the start of the story are always in
-  // view. The newest turn keeps enough room below it (see .story > .turn:last-of-type)
-  // for this to work early in a game too.
+  // On load, show the latest turn from its first line.
   const loaded = game !== null;
-  const playing = live !== null;
   useEffect(() => {
-    if (!loaded) return;
-    const initial = firstLoad.current;
-    firstLoad.current = false;
-    // A turn that just finished stays where it is; the player is reading it.
-    if (!initial && !playing && !error) return;
-    requestAnimationFrame(() =>
-      document
-        .querySelector(".story > .turn:last-of-type")
-        ?.scrollIntoView({ block: "start", behavior: initial ? "auto" : "smooth" }),
-    );
-  }, [loaded, playing, error]);
+    if (loaded) document.querySelector(".story > .turn:last-of-type")?.scrollIntoView({ block: "start" });
+  }, [loaded]);
+  // While a turn plays out, follow it down the page as dice land and text arrives.
+  const shownText = live && live.landed >= live.rolls.length ? live.text.length : 0;
+  useEffect(() => {
+    if (pendingInput || error) bottomRef.current?.scrollIntoView({ block: "end", behavior: "smooth" });
+  }, [pendingInput, error, live?.rolls.length, live?.landed, shownText]);
   // The finished turn replaces the live one once every die has landed.
   useEffect(() => {
     if (live?.result && live.landed >= live.rolls.length) {
@@ -172,12 +163,11 @@ export default function Game() {
         ))}
         {live && <LiveTurnView live={live} onLanded={() => setLive((l) => (l ? { ...l, landed: l.landed + 1 } : l))} />}
         {error && (
-          <section className="turn">
-            <p className="error" role="alert">
-              {error}
-            </p>
-          </section>
+          <p className="error" role="alert">
+            {error}
+          </p>
         )}
+        <div ref={bottomRef} />
       </div>
 
       <form className="compose" onSubmit={send}>

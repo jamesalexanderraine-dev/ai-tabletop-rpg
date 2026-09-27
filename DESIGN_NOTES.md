@@ -9,7 +9,6 @@ Short playtest notes, newest first. One entry per task: date, what changed, what
 - In a scripted test with realistic delays: the die appears as soon as the roll arrives (0.8s in the script), lands about 2.6s later, and the text follows straight after. (Slowed by 50% after the first playtest, from 1.6s to 2.4s of spin.)
 - Token usage and an estimated cost are now logged for every turn (Vercel logs, "DM turn usage"), and the system prompt is marked for caching across turns.
 - Considered and deferred: a small, fast model that picks the check before the DM runs. It would show the die a little sooner but adds a call to every turn and lets two models disagree about rulings. Revisit if real turns show the die appearing too late.
-- Playtest fix: the die was spinning below the fold, under the input bar and keyboard, because the page followed the bottom of the story. Now each new turn is pinned just under the header when you send, and the newest turn keeps enough room below it for that to work early in a game. The die stays in the top part of the screen, which the keyboard never covers. When the turn finishes, nothing jumps.
 - Watch on the first real playtest: how long before the die appears on a real turn? Does the text feel like it's typing out after the die lands, or arriving all at once?
 
 ## 2026-09-27: Milestone 3, leveling, skills, spells and traits
