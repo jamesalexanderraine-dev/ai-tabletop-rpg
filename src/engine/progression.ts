@@ -44,23 +44,46 @@ export interface SkillInfo {
 }
 
 // A broad, flat list: narrow and earned, and each one opens whole solution paths.
+// Each description says what the skill covers and how it shows up in play, so a
+// player knows what they're buying (and gets ideas), and the DM applies it the
+// same way.
 export const SKILLS: SkillInfo[] = [
-  { id: "athletics", name: "Athletics", stat: "might", description: "Climbing, swimming, lifting, breaking things." },
-  { id: "brawling", name: "Brawling", stat: "might", description: "Fists, headbutts and chairs in a bar fight." },
-  { id: "blades", name: "Blades", stat: "agility", description: "Swords, daggers and anything with an edge." },
-  { id: "stealth", name: "Stealth", stat: "agility", description: "Sneaking, hiding and not being noticed." },
-  { id: "sleight", name: "Sleight of Hand", stat: "agility", description: "Pickpocketing, lockpicking, palming cards." },
-  { id: "crafting", name: "Crafting", stat: "wits", description: "Woodwork, repairs and building what you need." },
-  { id: "lore", name: "Lore", stat: "wits", description: "History, legends, and knowing which mushroom is which." },
-  { id: "survival", name: "Survival", stat: "wits", description: "Tracking, foraging and finding your way." },
-  { id: "persuasion", name: "Persuasion", stat: "presence", description: "Honest charm, bargaining and speeches." },
-  { id: "deception", name: "Deception", stat: "presence", description: "Lies, disguises and a straight face." },
-  { id: "performance", name: "Performance", stat: "presence", description: "Song, story and holding a room." },
-  { id: "arcana", name: "Arcana", stat: "spirit", description: "Casting, sensing and understanding magic." },
-  { id: "healing", name: "Healing", stat: "spirit", description: "Bandages, herbs and bedside manner." },
-  { id: "insight", name: "Insight", stat: "spirit", description: "Reading people and spotting lies." },
-  { id: "gambling", name: "Gambling", stat: "luck", description: "Dice, cards and knowing when to fold." },
+  { id: "athletics", name: "Athletics", stat: "might", description: "Climbing, swimming, jumping and heavy lifting. Scale the wall, swim the moat, hold up the portcullis." },
+  { id: "brawling", name: "Brawling", stat: "might", description: "Fists, grapples and improvised weapons. Win the bar fight, pin a guard, swing a chair." },
+  { id: "blades", name: "Blades", stat: "agility", description: "Swords, daggers, axes and anything with an edge. Fight, parry, or cut your way out of a tent." },
+  { id: "stealth", name: "Stealth", stat: "agility", description: "Moving unseen and unheard. Slip past guards, tail a mark, hide in plain sight." },
+  { id: "sleight", name: "Sleight of Hand", stat: "agility", description: "Quick, careful hands. Pick locks and pockets, palm a card, plant evidence." },
+  { id: "crafting", name: "Crafting", stat: "wits", description: "Making and mending things. Repair gear, rig a trap, build a raft (or, given time, a ship)." },
+  { id: "lore", name: "Lore", stat: "wits", description: "History, legends, heraldry and old knowledge. Know who built the ruin, what the crest means, which mushroom kills." },
+  { id: "survival", name: "Survival", stat: "wits", description: "Wilderness know-how. Track prey, forage, read the weather, find a safe place to camp." },
+  { id: "persuasion", name: "Persuasion", stat: "presence", description: "Honest charm, bargaining and speeches. Talk down a fight, haggle a price, rally a crowd." },
+  { id: "deception", name: "Deception", stat: "presence", description: "Lies, disguises and a straight face. Bluff past a guard, forge a letter, play a part." },
+  { id: "performance", name: "Performance", stat: "presence", description: "Song, story and stagecraft. Hold a room, stage a distraction, earn coin in a tavern." },
+  { id: "animals", name: "Animal Handling", stat: "spirit", description: "Calming, training and riding animals. Soothe a spooked horse, win a hound's trust, raise something with wings." },
+  { id: "arcana", name: "Arcana", stat: "spirit", description: "Magic, monsters and ancient lore. Cast with more power, identify a curse, know where dragons make their dens." },
+  { id: "healing", name: "Healing", stat: "spirit", description: "Medicine, herbs and bedside manner. Stop the bleeding, cure a poison, keep a friend alive." },
+  { id: "insight", name: "Insight", stat: "spirit", description: "Reading people. Spot a lie, sense a motive, tell when someone is afraid." },
+  { id: "gambling", name: "Gambling", stat: "luck", description: "Games of chance and nerve. Win at dice and cards, spot a cheat, know when to walk away." },
 ];
+
+export interface StatInfo {
+  id: Stat;
+  name: string;
+  description: string;
+}
+
+// What each stat covers, with and without a roll (see docs/DESIGN.md, "Two ways
+// stats and skills act").
+export const STAT_INFO: StatInfo[] = [
+  { id: "might", name: "Might", description: "Strength and toughness. Lifting, breaking and hitting hard; people ask you to move the fallen cart." },
+  { id: "agility", name: "Agility", description: "Speed, balance and precision. Dodging, sneaking, quick hands and a good aim." },
+  { id: "wits", name: "Wits", description: "Knowledge and sharp thinking. Noticing clues, recalling lore, working out puzzles." },
+  { id: "presence", name: "Presence", description: "Force of personality. Persuading, lying, commanding and performing; people listen when you talk." },
+  { id: "spirit", name: "Spirit", description: "Willpower, intuition and magic. Casting spells, resisting fear, reading people and beasts." },
+  { id: "luck", name: "Luck", description: "Fortune's favour. Games of chance, lucky breaks, and things tending to go your way." },
+];
+
+export const statInfo = (id: Stat) => STAT_INFO.find((s) => s.id === id)!;
 
 export interface SpellInfo {
   id: string;

@@ -2,7 +2,7 @@
 
 import { useEffect, useState, type ReactNode } from "react";
 import { capitalize, type GameState } from "@/engine/game";
-import { MAX_SKILL_RANK, SKILLS, SPELLS, xpForNextLevel } from "@/engine/progression";
+import { MAX_SKILL_RANK, SKILLS, SPELLS, STAT_INFO, xpForNextLevel } from "@/engine/progression";
 
 export function formatMod(m: number): string {
   return m >= 0 ? `+${m}` : `−${Math.abs(m)}`;
@@ -106,13 +106,17 @@ function CharacterTab({ game }: { game: GameState }) {
       <p className="sheet-line muted">{game.scene.name}</p>
 
       <h3>Stats</h3>
-      <p className="stats">
-        {Object.entries(stats).map(([s, m]) => (
-          <span key={s}>
-            {capitalize(s)} <strong>{formatMod(m)}</strong>
-          </span>
+      <ul className="rows">
+        {STAT_INFO.map((st) => (
+          <li key={st.id}>
+            <span>
+              {st.name} <strong>{formatMod(stats[st.id])}</strong>
+              <br />
+              <span className="muted small">{st.description}</span>
+            </span>
+          </li>
         ))}
-      </p>
+      </ul>
 
       <h3>Skills</h3>
       {trained.length === 0 && !showAll && <p className="muted">None trained yet. You earn skill points when you level up.</p>}

@@ -15,6 +15,7 @@ import {
   MP_PER_LEVEL,
   pendingLevelUps,
   SKILLS,
+  statInfo,
   type LevelUpChoice,
 } from "@/engine/progression";
 import { formatMod, Pips, SheetFrame, SpellText } from "./Sheet";
@@ -75,9 +76,9 @@ export function LevelUp({ game, onApply, onClose }: { game: GameState; onApply: 
               return (
                 <li key={s.id} className={added ? "picked" : undefined}>
                   <span>
-                    {s.name} <span className="muted small">{capitalize(s.stat)}</span>
+                    {s.name} <span className="muted small">{capitalize(s.stat)}</span> <Pips rank={base + added} />
                     <br />
-                    <Pips rank={base + added} />
+                    <span className="muted small">{s.description}</span>
                   </span>
                   <span className="stepper">
                     <button type="button" aria-label={`Remove a point from ${s.name}`} disabled={!added} onClick={() => adjust(s.id, -1)}>
@@ -134,6 +135,11 @@ export function LevelUp({ game, onApply, onClose }: { game: GameState; onApply: 
               </button>
             ))}
           </div>
+          <p className="muted small stat-hint">
+            {choice.stat
+              ? `${statInfo(choice.stat).name}: ${statInfo(choice.stat).description}`
+              : "Tap a stat to see what it covers."}
+          </p>
         </>
       )}
 
