@@ -9,7 +9,8 @@ Short playtest notes, newest first. One entry per task: date, what changed, what
 - `use_ability` replaces `cast_spell`. The DM must call it whenever the player's action is covered by an ability, named or not, so freeform wording costs the same (docs/UPDATES.md: implicit and explicit use resolve to identical mechanics).
 - MP and stamina are one pool per character, 4 at level 1 and +2 per level; each level-up offers the archetype's own abilities.
 - Older saves become mages: their spells stay valid and Spark is added.
-- Not yet: "Something else" (a generated archetype), and once-per-day cooldowns. Stamina covers the cost for now.
+- No once-per-day cooldowns, by decision: warrior and rogue abilities work exactly like spells (a stamina cost, usable whenever the pool allows), just never supernatural in the world.
+- Not yet: "Something else" (a generated archetype).
 - Watch on the next playtest: does the DM call use_ability when the player just describes the feat? Are 4 points of stamina at level 1 too tight or too loose? Do the abilities get used outside fights?
 
 ## 2026-09-27: Playtest fixes, part 1 (failure, difficulty, one-liners)

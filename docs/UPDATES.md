@@ -3,6 +3,7 @@
 > Snapshot of the living doc from playtesting (created 2026-09-26): https://claude.ai/artifact/5osCBPeKd1rBpcdsMMevs6
 > It refines and in places overrides `docs/DESIGN.md`. The living doc is the source of truth; if they disagree, ask before building.
 > Clarified by James on 2026-09-27: "no tappable chips" means no suggestion chips; the ability chips in the composer (below) stay. On failure: in general the story should progress forward, but a failure is a real failure with real consequences. Sometimes a failure may just have to derail the story, but the ideal is to progress the story by letting the player establish alternate routes in the face of a failure, never by making the failure a success.
+> Clarified on 2026-09-27: warrior and rogue abilities are not once per day. They work like spells, with a stamina cost instead of mana, but are not supernatural in the world. Where this doc mentions once-per-day cooldowns, read stamina cost instead.
 
 ## Core gameplay — working, protect it
 
