@@ -83,7 +83,7 @@ describe("parseGameState", () => {
       ],
     };
     const upgraded = parseGameState(v1);
-    expect(upgraded?.version).toBe(2);
+    expect(upgraded?.version).toBe(3);
     expect(upgraded?.character).toMatchObject({ name: "Bramble", backstory: ["A brewer-monk."], hp: STARTING_HP });
     expect(upgraded?.flags).toEqual({ fact_1: "Sereth owes Bramble a favour." });
     expect(upgraded?.turns.map((t) => t.narration)).toEqual([OPENING_NARRATION, "Sereth nods."]);
@@ -93,7 +93,7 @@ describe("parseGameState", () => {
   it("rejects malformed or tampered state", () => {
     const good = newGame();
     expect(parseGameState(null)).toBeNull();
-    expect(parseGameState({ ...good, version: 3 })).toBeNull();
+    expect(parseGameState({ ...good, version: 4 })).toBeNull();
     expect(parseGameState({ ...good, turns: [] })).toBeNull();
     expect(parseGameState({ ...good, character: { ...good.character, hp: 50 } })).toBeNull();
     expect(parseGameState({ ...good, inventory: [{ name: "Sword" }] })).toBeNull();
@@ -102,5 +102,26 @@ describe("parseGameState", () => {
     expect(
       parseGameState({ ...good, turns: [{ player: "x", narration: "y", rolls: [{ stat: "wits" }], changes: [] }] }),
     ).toBeNull();
+  });
+
+  it("upgrades a Milestone 2 save to level 1, with earned XP ready to level up", () => {
+    const v2 = { ...newGame(), version: 2, character: { name: "Bramble", backstory: [], hp: 8, maxHp: 10, xp: 60, conditions: ["soaked"] } };
+    const upgraded = parseGameState(v2);
+    expect(upgraded?.character).toMatchObject({ name: "Bramble", level: 1, xp: 60, hp: 8, mp: 0, conditions: ["soaked"], spells: [] });
+  });
+
+  it("rejects builds the rules don't allow", () => {
+    const good = newGame();
+    const withChar = (patch: object) => ({ ...good, character: { ...good.character, ...patch } });
+    expect(parseGameState(withChar({ level: 2 }))).toBeNull(); // level without the XP
+    expect(parseGameState(withChar({ skills: { stealth: 1 } }))).toBeNull(); // points not earned yet
+    expect(parseGameState(withChar({ spells: ["mend"] }))).toBeNull(); // no spells at level 1
+    expect(parseGameState(withChar({ statRaises: { might: 1 } }))).toBeNull();
+    expect(parseGameState(withChar({ maxHp: 50, hp: 50 }))).toBeNull();
+
+    const level2 = withChar({ level: 2, xp: 50, maxHp: 13, hp: 13, maxMp: 3, mp: 3, skills: { stealth: 2 }, spells: ["mend"], statRaises: { wits: 1 } });
+    expect(parseGameState(level2)?.stats.wits).toBe(STARTING_STATS.wits + 1);
+    expect(parseGameState({ ...level2, character: { ...level2.character, spells: ["unseen"] } })).toBeNull(); // level 5 spell
+    expect(parseGameState({ ...level2, character: { ...level2.character, skills: { stealth: 3 } } })).toBeNull();
   });
 });

@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import type { Rng } from "./dice";
 import { MAX_BACKSTORY_FACTS, MAX_ITEMS, MAX_ROLLS_PER_TURN, newGame, STARTING_HP, STARTING_STATS, type GameState } from "./game";
+import { applyLevelUp } from "./progression";
 import { applyDmTool, type ToolApplied } from "./tools";
 
 const face = (n: number): Rng => () => (n - 1) / 20;
@@ -154,5 +155,60 @@ describe("move_scene and update_story", () => {
 
     const story = ok(apply(moved.state, "update_story", { summary: "Bramble escaped the cell." })).state.story;
     expect(story).toEqual({ summary: "Bramble escaped the cell.", turn: 1 });
+  });
+});
+
+function level2(): GameState {
+  const game = newGame();
+  const outcome = applyLevelUp(
+    { ...game, character: { ...game.character, xp: 50 } },
+    { skills: { stealth: 2 }, spell: "mend", stat: "agility", trait: null },
+  );
+  if (!outcome.ok) throw new Error(outcome.error);
+  return outcome.state;
+}
+
+describe("skills on rolls", () => {
+  it("adds the character's rank in the skill, and nothing for an untrained one", () => {
+    const trained = ok(apply(level2(), "roll_check", { stat: "agility", skill: "stealth", difficulty: "hard", reason: "sneak" }, 0, face(10)));
+    expect(trained.roll).toMatchObject({ skill: "stealth", skillBonus: 2, situationalBonus: 0, total: 10 + 2 + 2 });
+    expect(trained.message).toContain("Agility (Stealth) check");
+
+    const untrained = ok(apply(level2(), "roll_check", { stat: "might", skill: "athletics", difficulty: "hard", reason: "climb" }, 0, face(10)));
+    expect(untrained.roll).toMatchObject({ skillBonus: 0, total: 10 + 1 });
+    expect(apply(level2(), "roll_check", { stat: "might", skill: "juggling", difficulty: "easy", reason: "x" }).ok).toBe(false);
+  });
+});
+
+describe("magic", () => {
+  it("casts a known spell, spending MP", () => {
+    const cast = ok(apply(level2(), "cast_spell", { spell: "Mend" }));
+    expect(cast.state.character.mp).toBe(1);
+    expect(cast.change).toEqual({ kind: "spell", text: "Cast Mend · −2 MP" });
+    expect(cast.message).toMatch(/Knit a wound/);
+  });
+
+  it("refuses unknown spells and empty MP pools", () => {
+    expect(errorOf(apply(level2(), "cast_spell", { spell: "Fireball" }))).toMatch(/Known spells: Mend/);
+    expect(errorOf(apply(newGame(), "cast_spell", { spell: "mend" }))).toMatch(/Known spells: none/);
+    const drained = ok(apply(level2(), "update_character", { mp_change: -3 })).state;
+    expect(errorOf(apply(drained, "cast_spell", { spell: "mend" }))).toMatch(/costs 2 MP/);
+  });
+
+  it("restores MP up to the maximum", () => {
+    const rested = ok(apply(ok(apply(level2(), "cast_spell", { spell: "mend" })).state, "update_character", { mp_change: 10 }));
+    expect(rested.state.character.mp).toBe(3);
+  });
+});
+
+describe("grant_trait", () => {
+  it("adds a story trait with its upside and downside, once", () => {
+    const granted = ok(apply(newGame(), "grant_trait", { name: "Hook for a Hand", upside: "Great for climbing.", downside: "Terrible at knitting." }));
+    expect(granted.state.character.traits).toEqual([
+      { name: "Hook for a Hand", upside: "Great for climbing.", downside: "Terrible at knitting.", source: "story" },
+    ]);
+    expect(granted.change).toEqual({ kind: "trait", text: "New trait: Hook for a Hand" });
+    expect(apply(granted.state, "grant_trait", { name: "hook for a hand", upside: "x", downside: "y" }).ok).toBe(false);
+    expect(apply(newGame(), "grant_trait", { name: "Blessed", upside: "Everything." }).ok).toBe(false);
   });
 });

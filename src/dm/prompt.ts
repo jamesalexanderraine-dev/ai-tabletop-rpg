@@ -3,7 +3,14 @@
 
 import { DIFFICULTY, STATS } from "@/engine/dice";
 import { ATTITUDES, capitalize, describeRoll, STORY_SUMMARY_EVERY, type GameState } from "@/engine/game";
-import { MAX_HP_CHANGE, MAX_XP_GAIN } from "@/engine/tools";
+import { MAX_HP_CHANGE, MAX_MP_CHANGE, MAX_XP_GAIN } from "@/engine/tools";
+import {
+  pendingLevelUps,
+  SKILLS,
+  skillInfo,
+  spellInfo,
+  xpForNextLevel,
+} from "@/engine/progression";
 
 export const HISTORY_WINDOW = 10;
 
@@ -17,7 +24,7 @@ How you run each turn:
 
 Dice:
 - When an outcome is uncertain and interesting, call roll_check BEFORE narrating the outcome. The engine rolls; you never invent or predict a number.
-- Pick the stat that fits the attempt (${STATS.join(", ")}) and a difficulty: ${Object.entries(DIFFICULTY)
+- Pick the stat that fits the attempt (${STATS.join(", ")}), plus the skill that fits if one does (the engine adds the character's rank in it), and a difficulty: ${Object.entries(DIFFICULTY)
   .map(([name, n]) => `${name} ${n}`)
   .join(", ")}.
 - Creative or clever approaches earn a situational_bonus (+1 to +3, up to +5 for brilliance). Don't punish creativity.
@@ -32,6 +39,10 @@ The world is stored in code, not in your memory. You only see a short window of 
 - World facts that should persist (a promise, a door left open, a favour owed): set_flag.
 - Going somewhere new: move_scene, with a short description of the new place.
 - The player's name and who they are: remember (about "name" or "backstory"). Treat their own words about themselves as canon, even when they're silly.
+- Magic: when the player casts a spell they know, call cast_spell (it spends MP), then narrate the effect. They can only cast spells listed in the state. Resting restores MP and HP through update_character.
+- Traits are the spice: occasionally, when the story earns it, grant_trait a double-edged trait tailored to what happened (every trait needs a real upside and a real downside). Rarely, not every scene. Bring the character's traits into play, the downsides as well as the upsides.
+
+Progression: stats and skills set how the world treats the character even without a roll (a strong character is asked to lift the fallen cart; a trained liar is believed). Leveling up happens in a menu the player opens; when a level-up is waiting, you can mention they feel ready to grow, but never pick for them.
 - When the state says the story summary is due, call update_story with a fresh "story so far" (a few sentences covering everything important, including older events).
 
 Tone: the world plays it earnest, with light comedy simmering underneath. Mirror the player's level of absurdity: straight if they're straight, gonzo if they push it. Silly choices stick and the world reacts to them with a straight face. Only refuse things that break the fiction (like teleporting to the moon at level 1), and say why in character.
@@ -60,6 +71,11 @@ export const DM_TOOLS = [
         type: "integer",
         description: "Bonus for creativity or good circumstances, or a penalty for bad ones. Usually 0 to 3.",
       },
+      skill: {
+        type: "string",
+        enum: SKILLS.map((s) => s.id),
+        description: "The trained skill that fits, if any. Untrained skills add nothing.",
+      },
       reason: { type: "string", description: "What is being attempted, in a few words, e.g. 'pick the cell lock'." },
     },
     ["stat", "difficulty", "reason"],
@@ -75,9 +91,10 @@ export const DM_TOOLS = [
   ),
   tool(
     "update_character",
-    "Change the player character's HP, XP or conditions. Include only the fields that change.",
+    "Change the player character's HP, MP, XP or conditions. Include only the fields that change.",
     {
       hp_change: { type: "integer", description: `Negative for harm, positive for healing (-${MAX_HP_CHANGE} to ${MAX_HP_CHANGE}).` },
+      mp_change: { type: "integer", description: `Magic points restored by rest, or drained (-${MAX_MP_CHANGE} to ${MAX_MP_CHANGE}).` },
       xp_gain: { type: "integer", description: `XP earned (0 to ${MAX_XP_GAIN}).` },
       add_conditions: { type: "array", items: { type: "string" }, description: "e.g. bleeding, soaked, drunk, disguised." },
       remove_conditions: { type: "array", items: { type: "string" } },
@@ -138,6 +155,22 @@ export const DM_TOOLS = [
     { summary: { type: "string", description: "A few sentences covering everything important so far." } },
     ["summary"],
   ),
+  tool(
+    "cast_spell",
+    "Cast one of the player's known spells. Spends its MP cost and returns the spell's effect to narrate.",
+    { spell: { type: "string", description: "The spell's name or id, as listed in the state." } },
+    ["spell"],
+  ),
+  tool(
+    "grant_trait",
+    "Give the player a new double-edged trait that the story has earned.",
+    {
+      name: { type: "string", description: "Short and evocative, e.g. 'Hook for a Hand'." },
+      upside: { type: "string", description: "What it lets them do, in one sentence." },
+      downside: { type: "string", description: "What it costs them, in one sentence." },
+    },
+    ["name", "upside", "downside"],
+  ),
 ];
 
 function list(items: string[], empty: string): string {
@@ -147,10 +180,23 @@ function list(items: string[], empty: string): string {
 export function buildStateSummary(state: GameState): string {
   const { character: c, stats, inventory, npcs, flags, scene, story } = state;
   const lines = [
-    `Character: ${c.name ?? "name not yet known"}. HP ${c.hp}/${c.maxHp}. XP ${c.xp}. Conditions: ${c.conditions.join(", ") || "none"}.`,
+    `Character: ${c.name ?? "name not yet known"}. Level ${c.level}. HP ${c.hp}/${c.maxHp}. MP ${c.mp}/${c.maxMp}. XP ${c.xp}${
+      xpForNextLevel(c.level) === null ? "" : ` (next level at ${xpForNextLevel(c.level)})`
+    }. Conditions: ${c.conditions.join(", ") || "none"}.`,
     `Stat modifiers: ${Object.entries(stats)
       .map(([s, m]) => `${capitalize(s)} ${m >= 0 ? "+" : ""}${m}`)
       .join(", ")}`,
+    `Skills: ${list(
+      Object.entries(c.skills)
+        .filter(([, rank]) => rank > 0)
+        .map(([id, rank]) => `${skillInfo(id)?.name ?? id} +${rank}`),
+      "none trained",
+    )}`,
+    `Spells known: ${list(
+      c.spells.map((id) => spellInfo(id)).flatMap((sp) => (sp ? [`${sp.name} (${sp.cost} MP): ${sp.description}`] : [])),
+      "none",
+    )}`,
+    `Traits: ${list(c.traits.map((t) => `${t.name}: ${t.upside} But: ${t.downside}`), "none")}`,
     `Backstory: ${c.backstory.length ? c.backstory.join(" ") : "nothing established yet"}`,
     `Inventory: ${list(inventory.map((i) => (i.tags.length ? `${i.name} (${i.tags.join(", ")})` : i.name)), "empty")}`,
     `Scene: ${scene.name}. ${scene.description}`,
@@ -163,6 +209,7 @@ export function buildStateSummary(state: GameState): string {
     lines.push(`Recent rolls: ${recentRolls.map((r) => `${r.reason} (${describeRoll(r)})`).join("; ")}`);
   }
   lines.push(`Turn: ${state.turns.length}`);
+  if (pendingLevelUps(state) > 0) lines.push("A level-up is waiting for the player in their menu.");
   if (state.turns.length - story.turn >= STORY_SUMMARY_EVERY) {
     lines.push("The story summary is due: call update_story this turn.");
   }

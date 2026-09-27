@@ -2,6 +2,15 @@
 
 Short playtest notes, newest first. One entry per task: date, what changed, what felt good or bad, what to try next.
 
+## 2026-09-27: Milestone 3, leveling, skills, spells and traits
+
+- Levels come from XP (level 2 at 50, 3 at 120, then steeper, up to 10). Each level: +3 max HP and MP, 2 skill points, one new spell; a stat raise on even levels and a double-edged trait on odd levels from 3. Every pick is validated in `src/engine/progression.ts`, and the server re-checks that a saved build is legal for its level.
+- 15 flat skills; `roll_check` takes an optional skill and the engine adds its rank. 12 spells from level 2, cast through a new `cast_spell` tool that spends MP. The DM can also `grant_trait` a story-earned trait with an upside and a downside.
+- UI: level and an MP bar in the header, a pulsing "Level up!" button when XP allows, a level-up screen with "Choose for me", and a tabbed sheet (Character, Spells with search, Pack, People).
+- Character creation stays light: level 1 has no skills or spells, so the build grows from play.
+- Milestone 2 saves upgrade to level 1 with their XP intact, so a long game may have a level-up waiting.
+- Watch on the first real playtest: is 50 XP to level 2 about right for a 20 to 40 minute session? Does the DM use skills on rolls and bring traits' downsides into play? Is the 15-row skill list too long on a phone?
+
 ## 2026-09-26: Milestone 2, persistent state and tools
 
 - The DM now has tools for everything the design doc lists except images: `update_character` (HP, XP, conditions), `add_item` / `remove_item` with free-form tags, `set_flag`, `spawn_npc` / `update_npc` with attitudes, `move_scene`, and `update_story` for the rolling "story so far" (requested every 10 turns). All of them are validated in `src/engine/tools.ts`, and impossible calls (removing an item you don't have, an unknown NPC) come back as errors the DM re-narrates.

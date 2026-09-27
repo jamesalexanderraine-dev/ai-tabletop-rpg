@@ -3,17 +3,33 @@
 // which validate and apply them here, or return an error the DM can re-narrate.
 
 import { STATS, type CheckResult, type Difficulty, type Stat } from "./dice";
+import {
+  levelForXp,
+  levelTraitsAt,
+  MAX_SKILL_RANK,
+  MAX_STAT,
+  MAX_TRAITS,
+  maxHpAt,
+  maxMpAt,
+  skillInfo,
+  skillPointsAt,
+  spellInfo,
+  spellsAt,
+  statRaisesAt,
+} from "./progression";
 
 export type Stats = Record<Stat, number>;
 
 export interface Roll extends CheckResult {
   stat: Stat;
+  skill: string | null; // a trained skill adds its rank to the roll
+  skillBonus: number;
   difficulty: Difficulty;
   reason: string;
 }
 
 // A visible record of something a tool changed, shown in the story as it happens.
-export const CHANGE_KINDS = ["item", "vitals", "npc", "scene", "note"] as const;
+export const CHANGE_KINDS = ["item", "vitals", "npc", "scene", "spell", "trait", "note"] as const;
 export type ChangeKind = (typeof CHANGE_KINDS)[number];
 export interface Change {
   kind: ChangeKind;
@@ -27,13 +43,27 @@ export interface Turn {
   changes: Change[];
 }
 
+export interface Trait {
+  name: string;
+  upside: string;
+  downside: string;
+  source: "level" | "story"; // picked at level-up, or granted by the DM
+}
+
 export interface Character {
   name: string | null;
   backstory: string[];
+  level: number;
+  xp: number;
   hp: number;
   maxHp: number;
-  xp: number;
+  mp: number;
+  maxMp: number;
   conditions: string[];
+  statRaises: Partial<Record<Stat, number>>;
+  skills: Record<string, number>; // skill id -> rank
+  spells: string[]; // spell ids
+  traits: Trait[];
 }
 
 export interface Item {
@@ -56,7 +86,7 @@ export interface Scene {
 }
 
 export interface GameState {
-  version: 2;
+  version: 3;
   character: Character;
   stats: Stats;
   inventory: Item[];
@@ -85,7 +115,7 @@ export const MAX_CONDITIONS = 8;
 export const MAX_SCENE_DESCRIPTION = 400;
 export const MAX_STORY_SUMMARY = 1500;
 export const STORY_SUMMARY_EVERY = 10;
-export const STARTING_HP = 10;
+export const STARTING_HP = maxHpAt(1);
 
 // A modest starting spread. Character creation proper arrives with progression.
 export const STARTING_STATS: Stats = {
@@ -119,8 +149,22 @@ export const OPENING_NARRATION =
 
 export function newGame(): GameState {
   return {
-    version: 2,
-    character: { name: null, backstory: [], hp: STARTING_HP, maxHp: STARTING_HP, xp: 0, conditions: [] },
+    version: 3,
+    character: {
+      name: null,
+      backstory: [],
+      level: 1,
+      xp: 0,
+      hp: STARTING_HP,
+      maxHp: STARTING_HP,
+      mp: 0,
+      maxMp: 0,
+      conditions: [],
+      statRaises: {},
+      skills: {},
+      spells: [],
+      traits: [],
+    },
     stats: { ...STARTING_STATS },
     inventory: [],
     npcs: OPENING_NPCS.map((n) => ({ ...n })),
@@ -151,12 +195,13 @@ export function validatePlayerInput(input: unknown): ToolOutcome<string> {
 }
 
 // Until saves move to the server, the browser sends its state with each turn.
-// Check its shape before trusting it; returns null if it doesn't fit. Milestone 1
-// saves (version 1) are upgraded so games in progress carry over.
+// Check its shape and that the build is one the rules allow before trusting it;
+// returns null if it doesn't fit. Older saves are upgraded so games carry over.
 export function parseGameState(raw: unknown): GameState | null {
   if (!isRecord(raw)) return null;
   if (raw.version === 1) return parseGameState(upgradeFromV1(raw));
-  if (raw.version !== 2) return null;
+  if (raw.version === 2) return parseGameState(upgradeFromV2(raw));
+  if (raw.version !== 3) return null;
   const { character: c, stats, inventory, npcs, flags, scene, story, turns } = raw;
   if (!isRecord(c) || !isRecord(stats) || !isRecord(flags) || !isRecord(scene) || !isRecord(story)) return null;
   if (!Array.isArray(inventory) || !Array.isArray(npcs) || !Array.isArray(turns)) return null;
@@ -164,9 +209,14 @@ export function parseGameState(raw: unknown): GameState | null {
   if (!(c.name === null || isText(c.name, MAX_NAME_LENGTH))) return null;
   if (!isTextList(c.backstory, MAX_BACKSTORY_FACTS, MAX_FACT_LENGTH)) return null;
   if (!isTextList(c.conditions, MAX_CONDITIONS, MAX_TAG_LENGTH)) return null;
-  if (!isInt(c.maxHp, 1, 999) || !isInt(c.hp, 0, c.maxHp) || !isInt(c.xp, 0, 1_000_000)) return null;
-  // Stats are fixed at the starting spread until progression exists, so ignore
-  // whatever the client sent rather than trusting it.
+  if (!isInt(c.xp, 0, 1_000_000) || !isInt(c.level, 1, levelForXp(c.xp))) return null;
+  const level = c.level;
+  if (c.maxHp !== maxHpAt(level) || !isInt(c.hp, 0, c.maxHp)) return null;
+  if (c.maxMp !== maxMpAt(level) || !isInt(c.mp, 0, c.maxMp)) return null;
+  const build = parseBuild(c, level);
+  if (!build) return null;
+  // Stats are derived from the starting spread plus level-up raises; whatever
+  // the client sent for them is ignored.
   if (!STATS.every((s) => typeof stats[s] === "number")) return null;
 
   if (inventory.length > MAX_ITEMS || !inventory.every(isItem)) return null;
@@ -188,28 +238,106 @@ export function parseGameState(raw: unknown): GameState | null {
     parsedTurns.push({
       player: t.player as string | null,
       narration: t.narration as string,
-      rolls: t.rolls as Roll[],
+      rolls: t.rolls.map((r: Roll) => ({ ...r, skill: r.skill ?? null, skillBonus: r.skillBonus ?? 0 })),
       changes: t.changes as Change[],
     });
   }
 
   return {
-    version: 2,
+    version: 3,
     character: {
       name: c.name as string | null,
       backstory: c.backstory,
-      hp: c.hp as number,
-      maxHp: c.maxHp as number,
-      xp: c.xp as number,
+      level,
+      xp: c.xp,
+      hp: c.hp,
+      maxHp: c.maxHp,
+      mp: c.mp,
+      maxMp: c.maxMp,
       conditions: c.conditions,
+      ...build,
     },
-    stats: { ...STARTING_STATS },
+    stats: statsFor(build.statRaises),
     inventory: inventory as Item[],
     npcs: npcs as Npc[],
     flags: flags as Record<string, string>,
     scene: { name: scene.name as string, description: scene.description as string },
     story: { summary: story.summary as string, turn: story.turn as number },
     turns: parsedTurns,
+  };
+}
+
+export function statsFor(raises: Partial<Record<Stat, number>>): Stats {
+  return Object.fromEntries(STATS.map((s) => [s, STARTING_STATS[s] + (raises[s] ?? 0)])) as Stats;
+}
+
+type Build = Pick<Character, "statRaises" | "skills" | "spells" | "traits">;
+
+// Checks the skill ranks, spells, stat raises and traits are a legal build for the level.
+function parseBuild(c: Record<string, unknown>, level: number): Build | null {
+  const { statRaises, skills, spells, traits } = c;
+  if (!isRecord(statRaises) || !isRecord(skills) || !Array.isArray(spells) || !Array.isArray(traits)) return null;
+
+  let raises = 0;
+  for (const [stat, n] of Object.entries(statRaises)) {
+    if (!(STATS as readonly string[]).includes(stat) || !isInt(n, 0, MAX_STAT)) return null;
+    if (STARTING_STATS[stat as Stat] + n > MAX_STAT) return null;
+    raises += n;
+  }
+  if (raises > statRaisesAt(level)) return null;
+
+  let points = 0;
+  for (const [id, rank] of Object.entries(skills)) {
+    if (!skillInfo(id) || !isInt(rank, 0, MAX_SKILL_RANK)) return null;
+    points += rank;
+  }
+  if (points > skillPointsAt(level)) return null;
+
+  if (spells.length > spellsAt(level) || new Set(spells).size !== spells.length) return null;
+  if (!spells.every((id) => typeof id === "string" && (spellInfo(id)?.level ?? Infinity) <= level)) return null;
+
+  if (traits.length > MAX_TRAITS || !traits.every(isTrait)) return null;
+  if (traits.filter((t) => t.source === "level").length > levelTraitsAt(level)) return null;
+
+  return {
+    statRaises: statRaises as Partial<Record<Stat, number>>,
+    skills: skills as Record<string, number>,
+    spells: spells as string[],
+    traits: traits as Trait[],
+  };
+}
+
+function isTrait(v: unknown): v is Trait {
+  return (
+    isRecord(v) &&
+    isText(v.name, MAX_NAME_LENGTH) &&
+    isText(v.upside, MAX_FACT_LENGTH) &&
+    isText(v.downside, MAX_FACT_LENGTH) &&
+    (v.source === "level" || v.source === "story")
+  );
+}
+
+// Milestone 2 saves: start the progression fields at level 1. XP already earned
+// counts, so a long game may have a level-up waiting.
+function upgradeFromV2(v2: Record<string, unknown>): Record<string, unknown> {
+  const c = isRecord(v2.character) ? v2.character : {};
+  const fresh = newGame().character;
+  return {
+    ...v2,
+    version: 3,
+    character: {
+      ...fresh,
+      ...c,
+      level: 1,
+      maxHp: fresh.maxHp,
+      hp: typeof c.hp === "number" ? Math.min(c.hp, fresh.maxHp) : fresh.hp,
+      mp: 0,
+      maxMp: 0,
+      statRaises: {},
+      skills: {},
+      spells: [],
+      traits: [],
+    },
   };
 }
 
@@ -220,6 +348,7 @@ function upgradeFromV1(v1: Record<string, unknown>): Record<string, unknown> {
   const fresh = newGame();
   return {
     ...fresh,
+    version: 2,
     character: { ...fresh.character, name: character.name ?? null, backstory: character.backstory ?? [] },
     stats: v1.stats,
     flags: Object.fromEntries(worldFacts.slice(0, MAX_FLAGS).map((fact, i) => [`fact_${i + 1}`, fact])),
@@ -260,6 +389,8 @@ function isRoll(r: unknown): r is Roll {
   return (
     isRecord(r) &&
     (STATS as readonly unknown[]).includes(r.stat) &&
+    (r.skill === undefined || r.skill === null || (typeof r.skill === "string" && !!skillInfo(r.skill))) &&
+    (r.skillBonus === undefined || isInt(r.skillBonus, 0, MAX_SKILL_RANK)) &&
     typeof r.difficulty === "string" &&
     ["easy", "medium", "hard", "heroic"].includes(r.difficulty) &&
     isText(r.reason, MAX_FACT_LENGTH) &&
@@ -270,11 +401,11 @@ function isRoll(r: unknown): r is Roll {
 }
 
 export function describeRoll(roll: Roll): string {
-  const mods = roll.statModifier + roll.situationalBonus;
+  const mods = roll.statModifier + roll.skillBonus + roll.situationalBonus;
   const sign = mods >= 0 ? "+" : "−";
   const crit = roll.critical === "success" ? " (natural 20)" : roll.critical === "failure" ? " (natural 1)" : "";
   return (
-    `${capitalize(roll.stat)} check, ${roll.difficulty} ${roll.target}: rolled ${roll.roll} ${sign} ${Math.abs(mods)} = ` +
+    `${capitalize(roll.stat)}${roll.skill ? ` (${skillInfo(roll.skill)?.name ?? roll.skill})` : ""} check, ${roll.difficulty} ${roll.target}: rolled ${roll.roll} ${sign} ${Math.abs(mods)} = ` +
     `${roll.total}, ${roll.success ? "success" : "failure"}${crit}`
   );
 }
