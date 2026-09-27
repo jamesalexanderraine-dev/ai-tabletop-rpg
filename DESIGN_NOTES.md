@@ -2,6 +2,15 @@
 
 Short playtest notes, newest first. One entry per task: date, what changed, what felt good or bad, what to try next.
 
+## 2026-09-26: Milestone 2, persistent state and tools
+
+- The DM now has tools for everything the design doc lists except images: `update_character` (HP, XP, conditions), `add_item` / `remove_item` with free-form tags, `set_flag`, `spawn_npc` / `update_npc` with attitudes, `move_scene`, and `update_story` for the rolling "story so far" (requested every 10 turns). All of them are validated in `src/engine/tools.ts`, and impossible calls (removing an item you don't have, an unknown NPC) come back as errors the DM re-narrates.
+- The state summary the DM sees each turn now includes HP, inventory with tags, scene, NPCs and flags, so the bread hat is remembered long after it leaves the 10-turn window.
+- UI: a vitals bar (name, HP, location), small notes under each turn for what changed (items, HP, attitudes, new places), and a Pack sheet with items, stats, backstory and people. Opening the pack never advances time.
+- Milestone 1 saves upgrade automatically, so a game in progress carries over.
+- Saves stay in the browser for now. Moving them to the server needs a database on Vercel, which is a separate setup step.
+- Watch on the first real playtest: does the DM call the tools without being asked (especially `add_item` for silly things)? Do the change notes feel like game feedback or like clutter?
+
 ## 2026-09-26: Milestone 1, text-only DM loop with dice
 
 - The game opens in a cell beneath Harrowgate Keep. Sereth, the dark elf opposite, asks who you are, and your answer becomes your character.

@@ -15,7 +15,7 @@ export type CreateMessage = (params: MessageParams) => Promise<Message>;
 // Enough for thinking plus a few tool calls and a short narration.
 const MAX_TOKENS = 8000;
 // Guards against a tool loop that never settles.
-const MAX_MODEL_CALLS = 6;
+const MAX_MODEL_CALLS = 8;
 
 // The server re-runs a declined turn on another model, for the models that support it.
 function supportsServerFallback(model: string): boolean {
