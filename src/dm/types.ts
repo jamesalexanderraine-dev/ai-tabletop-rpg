@@ -23,6 +23,13 @@ export interface DmToolResult {
 // and relays the result (or the engine's rejection) back to the model.
 export type DmToolHandler = (name: string, input: unknown) => DmToolResult;
 
+// Optional live updates while a turn is being written, for streaming to the player.
+export interface DmHooks {
+  onText?: (delta: string) => void;
+  // Text streamed so far was a preamble before a tool call, not the narration.
+  onDiscardText?: () => void;
+}
+
 export interface DungeonMaster {
-  narrate(input: DmTurnInput, runTool: DmToolHandler): Promise<string>;
+  narrate(input: DmTurnInput, runTool: DmToolHandler, hooks?: DmHooks): Promise<string>;
 }

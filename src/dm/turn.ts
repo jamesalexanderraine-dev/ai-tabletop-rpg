@@ -5,11 +5,17 @@ import type { Rng } from "@/engine/dice";
 import { appendTurn, type Change, type GameState, type Roll, type Turn } from "@/engine/game";
 import { applyDmTool } from "@/engine/tools";
 import { buildStateSummary, HISTORY_WINDOW } from "./prompt";
-import type { DmToolResult, DungeonMaster } from "./types";
+import type { DmHooks, DmToolResult, DungeonMaster } from "./types";
 
 export interface TurnResult {
   state: GameState;
   turn: Turn;
+}
+
+// Live updates as the turn unfolds: each roll the moment the engine makes it,
+// then the narration as it's written.
+export interface TurnEvents extends DmHooks {
+  onRoll?: (roll: Roll) => void;
 }
 
 export async function playTurn(
@@ -17,6 +23,7 @@ export async function playTurn(
   playerInput: string,
   dm: DungeonMaster,
   rng: Rng = Math.random,
+  events: TurnEvents = {},
 ): Promise<TurnResult> {
   let working = state;
   const rolls: Roll[] = [];
@@ -26,7 +33,10 @@ export async function playTurn(
     const applied = applyDmTool(working, name, input, { rollsSoFar: rolls.length, rng });
     if (!applied.ok) return { content: applied.error, isError: true };
     working = applied.state;
-    if (applied.roll) rolls.push(applied.roll);
+    if (applied.roll) {
+      rolls.push(applied.roll);
+      events.onRoll?.(applied.roll);
+    }
     if (applied.change) changes.push(applied.change);
     return { content: applied.message, isError: false };
   };
@@ -38,6 +48,7 @@ export async function playTurn(
       playerInput,
     },
     runTool,
+    { onText: events.onText, onDiscardText: events.onDiscardText },
   );
 
   const turn: Turn = { player: playerInput, narration: narration.trim(), rolls, changes };

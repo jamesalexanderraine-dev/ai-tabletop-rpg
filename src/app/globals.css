@@ -243,6 +243,47 @@ textarea {
   background: var(--lose);
 }
 
+.roll.rolling .die {
+  background: var(--muted);
+  animation: tumble 0.25s linear infinite;
+}
+
+.roll.win .die,
+.roll.lose .die {
+  animation: land 0.35s ease-out;
+}
+
+.roll.crit .die {
+  animation: land 0.35s ease-out, crit 1.2s ease-in-out 0.35s 2;
+}
+
+@keyframes tumble {
+  0% {
+    transform: rotate(0deg) scale(1);
+  }
+  50% {
+    transform: rotate(180deg) scale(0.88);
+  }
+  100% {
+    transform: rotate(360deg) scale(1);
+  }
+}
+
+@keyframes land {
+  0% {
+    transform: scale(1.35);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+@keyframes crit {
+  50% {
+    box-shadow: 0 0 0 0.45rem color-mix(in srgb, var(--accent) 35%, transparent);
+  }
+}
+
 .roll .math {
   color: var(--muted);
   font-variant-numeric: tabular-nums;
@@ -613,7 +654,8 @@ textarea {
 
 @media (prefers-reduced-motion: reduce) {
   .thinking,
-  .levelup-button {
-    animation: none;
+  .levelup-button,
+  .roll .die {
+    animation: none !important;
   }
 }
