@@ -33,6 +33,7 @@ import {
 import { StartScreen } from "./StartScreen";
 import { DiceRoll } from "./Dice";
 import { LevelUp } from "./LevelUp";
+import { Bubble, Narration } from "./Narration";
 import { CharacterSheet, Meter } from "./Sheet";
 import { readTurnEvents } from "./turnStream";
 
@@ -376,11 +377,11 @@ export default function Game() {
   );
 }
 
-// What the player did, with any chips they attached.
+// What the player did, in their own bubble, with any chips they attached.
 function PlayerLine({ text, ability, items, game }: { text: string; ability?: string; items?: string[]; game: GameState }) {
   const abilityName = ability ? (abilityFor(game.character, ability)?.name ?? ability) : null;
   return (
-    <p className="player">
+    <Bubble who={game.character.name ?? "You"} tone="you" you>
       {abilityName && (
         <span className={poolOf(game.character) === "MP" ? "chip ability mp" : "chip ability"}>
           <span aria-hidden>{"\u2726"}</span> {abilityName}
@@ -392,7 +393,7 @@ function PlayerLine({ text, ability, items, game }: { text: string; ability?: st
         </span>
       ))}
       {text}
-    </p>
+    </Bubble>
   );
 }
 
@@ -403,11 +404,7 @@ function TurnView({ turn, first, game }: { turn: Turn; first: boolean; game: Gam
       {turn.rolls.map((roll, i) => (
         <DiceRoll key={i} roll={roll} />
       ))}
-      <div className={first ? "narration opening" : "narration"}>
-        {turn.narration.split(/\n\s*\n/).map((para, i) => (
-          <p key={i}>{para}</p>
-        ))}
-      </div>
+      <Narration text={turn.narration} game={game} opening={first} />
       {turn.changes.length > 0 && (
         <ul className="changes">
           {turn.changes.map((change, i) => (
@@ -459,11 +456,7 @@ function LiveTurnView({ live, game, onLanded }: { live: LiveTurn; game: GameStat
         <DiceRoll key={i} roll={roll} animate onLanded={onLanded} />
       ))}
       {text ? (
-        <div className="narration">
-          {text.split(/\n\s*\n/).map((para, i) => (
-            <p key={i}>{para}</p>
-          ))}
-        </div>
+        <Narration text={text} game={game} />
       ) : (
         diceSettled && <p className="thinking">{live.rolls.length ? "The DM weighs the result…" : "The DM considers this…"}</p>
       )}

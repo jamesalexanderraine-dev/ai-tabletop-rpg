@@ -159,11 +159,12 @@ export function openingNarration(info: ArchetypeInfo): string {
   );
 }
 
+// Sereth speaks in a bubble (see narration.ts); the player doesn't know her name yet.
 const OPENING_QUESTION =
   "In the cell across the passage, a dark elf with a split lip leans against the bars and studies " +
-  "you with open curiosity. “Ah. The new one’s awake,” she says. “They dragged you in " +
-  "last night, and nobody could agree on what you’d done. So. Who are you, and how did you end " +
-  "up down here?”";
+  "you with open curiosity.\n\n" +
+  '<say who="The dark elf">Ah. The new one’s awake. They dragged you in last night, and nobody could ' +
+  "agree on what you’d done. So. Who are you, and how did you end up down here?</say>";
 
 // A new game for one of the three archetypes, or a generated one ("Something else").
 export function newGame(choice: BuiltInArchetype | CustomArchetype): GameState {

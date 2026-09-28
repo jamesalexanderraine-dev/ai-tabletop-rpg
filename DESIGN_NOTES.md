@@ -2,6 +2,15 @@
 
 Short playtest notes, newest first. One entry per task: date, what changed, what felt good or bad, what to try next.
 
+## 2026-09-28: Chat bubbles for dialogue
+
+- The DM now writes each spoken line as its own paragraph, `<say who="Sereth">Prepare to die.</say>`, and the story shows it as a chat bubble with the speaker's name and face. Action and staging stay in the prose around it (docs/UPDATES.md, "Chat bubbles for dialogue").
+- Faces are initials for now, until the preset image library. They're coloured by attitude, so friend and foe read at a glance: green friendly or allied, red unfriendly or hostile, grey neutral or unknown.
+- Your own lines are a bubble on the right, with your name once the DM knows it, and any chips inside.
+- The opening scene uses it too: the dark elf's question is the first bubble. She's "The dark elf" until she tells you her name.
+- The parser (`src/engine/narration.ts`) works on half-written text, so bubbles fill in as the DM writes and no raw tag ever shows. Anything malformed falls back to prose. Old turns without tags look as before, apart from your own line now being a bubble.
+- Watch on the next playtest: does the DM use say tags every time someone speaks, or drift back to inline quotes? Does the page feel too chat-like, or still like a book?
+
 ## 2026-09-28: The composer, with ability and pack chips
 
 - The input is now a chat-style composer: text on top, and a row with **✦ Abilities** (or **Spells**), **◆ Pack** and **Go** underneath.

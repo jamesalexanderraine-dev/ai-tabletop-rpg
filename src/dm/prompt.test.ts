@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import { DIFFICULTY, STATS } from "@/engine/dice";
 import { SKILLS, STAT_INFO } from "@/engine/progression";
 import { newGame } from "@/engine/game";
+import { parseNarration } from "@/engine/narration";
 import { buildStateSummary, DM_TOOLS, SYSTEM_PROMPT } from "./prompt";
 
 describe("SYSTEM_PROMPT", () => {
@@ -24,6 +25,14 @@ describe("SYSTEM_PROMPT", () => {
     expect(SYSTEM_PROMPT).toContain("roll_check is only for the player character's actions");
     const rollCheck = DM_TOOLS.find((t) => t.name === "roll_check");
     expect(rollCheck?.description).toContain("Never use it for enemies or NPCs");
+  });
+
+  it("asks for dialogue in say tags the story can turn into bubbles, and shows the format working", () => {
+    expect(SYSTEM_PROMPT).toContain('<say who="Name">');
+    expect(SYSTEM_PROMPT).toContain("Never put the player's own words in a say tag");
+    // The opening scene uses the same format, so the first thing the player sees is a bubble.
+    const opening = parseNarration(newGame("rogue").turns[0]!.narration);
+    expect(opening.at(-1)).toMatchObject({ kind: "speech", who: "The dark elf", text: expect.stringContaining("Who are you") });
   });
 
   it("defines every stat and skill the way the player sees them", () => {

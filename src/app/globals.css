@@ -207,15 +207,6 @@ textarea {
   color: var(--accent);
 }
 
-.player {
-  margin: 0 0 0.6rem;
-  padding-left: 0.8rem;
-  border-left: 2px solid var(--accent);
-  font-style: italic;
-  color: var(--muted);
-  white-space: pre-wrap;
-  overflow-wrap: anywhere;
-}
 
 .roll {
   display: flex;
@@ -826,10 +817,6 @@ textarea {
   cursor: pointer;
 }
 
-.player .chip {
-  margin-right: 0.35rem;
-  vertical-align: 0.05em;
-}
 
 /* The selector trays open above the composer. */
 .tray {
@@ -1004,4 +991,93 @@ textarea {
   display: block;
   width: 100%;
   margin-top: 1rem;
+}
+
+/* Dialogue as chat bubbles: a face and a name for every speaker, coloured by
+   which side they're on. The player's own lines sit on the right. */
+.say {
+  display: flex;
+  align-items: flex-end;
+  gap: 0.5rem;
+  margin: 0 0 0.8rem;
+}
+
+.say.you {
+  justify-content: flex-end;
+}
+
+.avatar {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 2rem;
+  height: 2rem;
+  border-radius: 50%;
+  background: var(--muted);
+  color: var(--bg);
+  font-weight: 700;
+  font-size: 0.95rem;
+}
+
+.say.friendly .avatar,
+.say.allied .avatar {
+  background: var(--win);
+}
+
+.say.unfriendly .avatar,
+.say.hostile .avatar {
+  background: var(--lose);
+}
+
+.say.you .avatar {
+  background: var(--accent);
+}
+
+.bubble {
+  max-width: 85%;
+  min-width: 0;
+  padding: 0.45rem 0.8rem 0.55rem;
+  border: 1px solid var(--rule);
+  border-radius: 1rem 1rem 1rem 0.3rem;
+  background: var(--panel);
+}
+
+.say.you .bubble {
+  border-radius: 1rem 1rem 0.3rem 1rem;
+  background: color-mix(in srgb, var(--accent) 9%, var(--bg));
+  border-color: color-mix(in srgb, var(--accent) 30%, var(--rule));
+}
+
+.speaker {
+  display: block;
+  font-size: 0.8rem;
+  font-variant: small-caps;
+  letter-spacing: 0.05em;
+  color: var(--muted);
+}
+
+.say.friendly .speaker,
+.say.allied .speaker {
+  color: var(--win);
+}
+
+.say.unfriendly .speaker,
+.say.hostile .speaker {
+  color: var(--lose);
+}
+
+.say.you .speaker {
+  color: var(--accent);
+}
+
+.bubble .words {
+  display: block;
+  font-size: 1.05rem;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.bubble .chip {
+  margin-right: 0.35rem;
+  vertical-align: 0.05em;
 }
