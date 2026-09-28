@@ -98,7 +98,12 @@ export interface Npc {
   name: string;
   attitude: Attitude;
   note: string;
+  // Who they are to the player, in a word or two ("Cellmate", "Innkeeper"),
+  // shown beside their name when they speak. Missing on older saves.
+  role?: string;
 }
+
+export const MAX_ROLE_LENGTH = 24;
 
 export interface Scene {
   name: string;
@@ -144,8 +149,8 @@ export const OPENING_SCENE: Scene = {
 };
 
 export const OPENING_NPCS: Npc[] = [
-  { name: "Sereth", attitude: "neutral", note: "Sharp-tongued dark elf thief in the cell opposite. Wants out and trades help for help." },
-  { name: "Old Tamsin", attitude: "unfriendly", note: "Bored dungeon guard who hums badly. Keeps the cell keys on his belt." },
+  { name: "Sereth", role: "Cellmate", attitude: "neutral", note: "Sharp-tongued dark elf thief in the cell opposite. Wants out and trades help for help." },
+  { name: "Old Tamsin", role: "Jailer", attitude: "unfriendly", note: "Bored dungeon guard who hums badly. Keeps the cell keys on his belt." },
 ];
 
 // The same prison for everyone, with one line that shows each archetype what it
@@ -163,7 +168,7 @@ export function openingNarration(info: ArchetypeInfo): string {
 const OPENING_QUESTION =
   "In the cell across the passage, a dark elf with a split lip leans against the bars and studies " +
   "you with open curiosity.\n\n" +
-  '<say who="The dark elf">Ah. The new one’s awake. They dragged you in last night, and nobody could ' +
+  '<say who="The dark elf" npc="Sereth">Ah. The new one’s awake. They dragged you in last night, and nobody could ' +
   "agree on what you’d done. So. Who are you, and how did you end up down here?</say>";
 
 // A new game for one of the three archetypes, or a generated one ("Something else").
@@ -459,7 +464,8 @@ function isNpc(v: unknown): v is Npc {
     isRecord(v) &&
     isText(v.name, MAX_NAME_LENGTH) &&
     (ATTITUDES as readonly unknown[]).includes(v.attitude) &&
-    isText(v.note, MAX_FACT_LENGTH)
+    isText(v.note, MAX_FACT_LENGTH) &&
+    (v.role === undefined || isText(v.role, MAX_ROLE_LENGTH))
   );
 }
 

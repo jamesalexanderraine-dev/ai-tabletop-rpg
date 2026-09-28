@@ -6,10 +6,11 @@ Short playtest notes, newest first. One entry per task: date, what changed, what
 
 - The DM now writes each spoken line as its own paragraph, `<say who="Sereth">Prepare to die.</say>`, and the story shows it as a chat bubble with the speaker's name and face. Action and staging stay in the prose around it (docs/UPDATES.md, "Chat bubbles for dialogue").
 - Faces are initials for now, until the preset image library. They're coloured by attitude, so friend and foe read at a glance: green friendly or allied, red unfriendly or hostile, grey neutral or unknown.
-- The speaker's face and name sit above the bubble; the bubble holds only the words (James's call after the first version put the name inside).
+- The speaker's face, name and role sit on a line above the bubble; the bubble holds only the words, starting beside the face and running to the far margin (James's calls after the first two versions).
+- Every character now has a role, who they are to you in a word or two ("Cellmate", "Jailer", "Innkeeper"), shown as a label beside their name and in the People tab. The DM sets it in spawn_npc and changes it with update_npc when the relationship shifts ("Jailer → Ally").
 - What you type stays a pull quote, as before. Only lines the DM gives your character to say aloud (`<say who="You">`) become a bubble, on the right, with your name once it's known.
-- The opening scene uses it too: the dark elf's question is the first bubble. She's "The dark elf" until she tells you her name.
-- The parser (`src/engine/narration.ts`) works on half-written text, so bubbles fill in as the DM writes and no raw tag ever shows. Anything malformed falls back to prose. Old turns without tags look as before, apart from your own line now being a bubble.
+- The opening scene uses it too: the dark elf's question is the first bubble. She's "The dark elf" until she tells you her name, but the tag links her to Sereth (`npc="Sereth"`), so her colour and "Cellmate" label are right from the start.
+- The parser (`src/engine/narration.ts`) works on half-written text, so bubbles fill in as the DM writes and no raw tag ever shows. Anything malformed falls back to prose. Old turns without tags look as before.
 - Watch on the next playtest: does the DM use say tags every time someone speaks, or drift back to inline quotes? Does the page feel too chat-like, or still like a book?
 
 ## 2026-09-28: The composer, with ability and pack chips

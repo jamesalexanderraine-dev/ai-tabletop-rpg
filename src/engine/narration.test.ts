@@ -34,6 +34,13 @@ describe("parseNarration", () => {
     expect(parseNarration('<say who="Sereth">Go.</')).toEqual([{ kind: "speech", who: "Sereth", text: "Go." }]);
   });
 
+  it("links a described speaker to the character in the state", () => {
+    expect(parseNarration('<say who="The guard" npc="Old Tamsin">Halt.</say>')).toEqual([
+      { kind: "speech", who: "The guard", npc: "Old Tamsin", text: "Halt." },
+    ]);
+    expect(parseNarration('<say npc="Sereth">No name given.</say>')).toEqual([{ kind: "prose", text: "No name given." }]);
+  });
+
   it("drops stray closing tags and empty speech", () => {
     expect(parseNarration('Quiet.</say>\n\n<say who="Sereth">  </say>')).toEqual([{ kind: "prose", text: "Quiet." }]);
   });

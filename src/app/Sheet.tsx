@@ -283,7 +283,8 @@ function PeopleTab({ game }: { game: GameState }) {
     <ul className="people">
       {game.npcs.map((n) => (
         <li key={n.name}>
-          <strong>{n.name}</strong> <span className={`attitude ${n.attitude}`}>{n.attitude}</span>
+          <strong>{n.name}</strong> {n.role && <span className="speaker-role">{n.role}</span>}{" "}
+          <span className={`attitude ${n.attitude}`}>{n.attitude}</span>
           <br />
           <span className="muted">{n.note}</span>
         </li>

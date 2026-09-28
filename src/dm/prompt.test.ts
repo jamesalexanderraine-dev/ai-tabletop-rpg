@@ -32,7 +32,9 @@ describe("SYSTEM_PROMPT", () => {
     expect(SYSTEM_PROMPT).toContain('<say who="You">');
     // The opening scene uses the same format, so the first thing the player sees is a bubble.
     const opening = parseNarration(newGame("rogue").turns[0]!.narration);
-    expect(opening.at(-1)).toMatchObject({ kind: "speech", who: "The dark elf", text: expect.stringContaining("Who are you") });
+    expect(opening.at(-1)).toMatchObject({ kind: "speech", who: "The dark elf", npc: "Sereth", text: expect.stringContaining("Who are you") });
+    expect(buildStateSummary(newGame("rogue"))).toContain("Sereth (Cellmate), neutral");
+    expect(DM_TOOLS.find((t) => t.name === "spawn_npc")?.input_schema.required).toContain("role");
   });
 
   it("defines every stat and skill the way the player sees them", () => {

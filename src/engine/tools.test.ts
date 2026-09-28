@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { Rng } from "./dice";
-import { MAX_BACKSTORY_FACTS, MAX_ITEMS, MAX_ROLLS_PER_TURN, newGame, STARTING_HP, type GameState } from "./game";
+import { MAX_BACKSTORY_FACTS, MAX_ITEMS, MAX_ROLLS_PER_TURN, newGame, parseGameState, STARTING_HP, type GameState } from "./game";
 import { applyLevelUp, archetypeInfo, maxEnergyAt } from "./progression";
 import { applyDmTool, type ToolApplied } from "./tools";
 
@@ -139,6 +139,17 @@ describe("npcs", () => {
     const warmed = ok(apply(spawned.state, "update_npc", { name: "old tamsin", attitude: "friendly" }));
     expect(warmed.state.npcs.find((n) => n.name === "Old Tamsin")?.attitude).toBe("friendly");
     expect(warmed.change).toEqual({ kind: "npc", text: "Old Tamsin · unfriendly → friendly" });
+  });
+
+  it("keeps who each character is to the player, and shows when that changes", () => {
+    expect(newGame("mage").npcs.map((n) => n.role)).toEqual(["Cellmate", "Jailer"]);
+    const met = ok(apply(newGame("mage"), "spawn_npc", { name: "Mags", role: "innkeeper", attitude: "friendly", note: "Runs the tavern." }));
+    expect(met.state.npcs.at(-1)).toMatchObject({ name: "Mags", role: "Innkeeper" });
+    expect(met.change).toEqual({ kind: "npc", text: "Met Mags, innkeeper · friendly" });
+    const turned = ok(apply(met.state, "update_npc", { name: "Old Tamsin", role: "Ally", attitude: "friendly" }));
+    expect(turned.change).toEqual({ kind: "npc", text: "Old Tamsin · Jailer → Ally, unfriendly → friendly" });
+    expect(apply(met.state, "spawn_npc", { name: "Bo", role: "x".repeat(25), attitude: "neutral", note: "y" }).ok).toBe(false);
+    expect(parseGameState(JSON.parse(JSON.stringify(turned.state)))?.npcs.find((n) => n.name === "Old Tamsin")?.role).toBe("Ally");
   });
 
   it("rejects duplicates, unknown NPCs and made-up attitudes", () => {

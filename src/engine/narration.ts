@@ -5,9 +5,18 @@
 // on half-written text while a turn streams in, and anything that isn't a
 // well-formed tag is shown as prose rather than lost.
 
-export type NarrationPart = { kind: "prose"; text: string } | { kind: "speech"; who: string; text: string };
+// `npc` links a speaker the player only knows by description ("The guard") to
+// the character in the state, for their face and role.
+export type NarrationPart =
+  | { kind: "prose"; text: string }
+  | { kind: "speech"; who: string; npc?: string; text: string };
 
-const SAY = /<say\s+who\s*=\s*["“]([^"”\n]{1,60})["”]\s*>([\s\S]*?)(?:<\/say>|$)/g;
+const SAY = /<say\s+([^>]*)>([\s\S]*?)(?:<\/say>|$)/g;
+const ATTR = /(\w+)\s*=\s*["“]([^"”\n]{1,60})["”]/g;
+
+function attributes(raw: string): Record<string, string> {
+  return Object.fromEntries([...raw.matchAll(ATTR)].map((m) => [m[1]!.toLowerCase(), m[2]!.trim()]));
+}
 // The start of a tag that hasn't finished arriving yet.
 const PARTIAL_TAG = /<(?:s(?:a(?:y(?:\s[^>]*)?)?)?|\/(?:s(?:a(?:y)?)?)?)?$/;
 
@@ -25,8 +34,10 @@ export function parseNarration(text: string): NarrationPart[] {
     let last = 0;
     for (const m of paragraph.matchAll(SAY)) {
       prose(paragraph.slice(last, m.index));
+      const { who, npc } = attributes(m[1]!);
       const words = unquote(m[2]!);
-      if (words) parts.push({ kind: "speech", who: m[1]!.trim(), text: words });
+      if (words && who) parts.push({ kind: "speech", who, ...(npc && { npc }), text: words });
+      else prose(words);
       last = m.index! + m[0].length;
     }
     prose(paragraph.slice(last));
