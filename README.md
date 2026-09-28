@@ -37,6 +37,16 @@ Optional: set `DM_MODEL` in either place to change which Claude model plays the 
 
 From then on, every pull request gets its own preview URL in a PR comment, and merges to `main` deploy to production.
 
+## Server saves (one-time setup)
+
+Without a database, games are saved in the browser, so each preview link (a different site as far as the browser is concerned) starts empty. To keep games on the server, where every link and device can see them:
+
+1. In Vercel, open the project's **Storage** tab, tap **Create Database** and pick **Upstash** (Redis). Choose the **Free** plan and a region near you.
+2. Connect it to the project for **all environments** (Production, Preview, Development). This adds `KV_REST_API_URL` and `KV_REST_API_TOKEN`.
+3. Redeploy (or push a commit). `/api/health` shows `"serverSaves": true` once it's live.
+
+A game already saved in a browser uploads itself the first time that browser opens the site with server saves on, so open the link you were playing on before starting anything new there. Anyone with the site's link can see and continue the saved games, the same way anyone with the link can already play.
+
 ## Local development
 
 ```bash
