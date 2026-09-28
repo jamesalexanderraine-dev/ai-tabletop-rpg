@@ -1,6 +1,6 @@
 # AI Dungeon Master RPG
 
-A single-player RPG where an LLM Dungeon Master improvises story and rulings on anything the player types. The full design is in `docs/DESIGN.md` (a snapshot of the living design doc linked at its top). Read the relevant section before building a feature.
+A single-player RPG where an LLM Dungeon Master improvises story and rulings on anything the player types. The full design is in `docs/DESIGN.md` (a snapshot of the living design doc linked at its top), refined by playtest findings in `docs/UPDATES.md` (also a snapshot of a living doc). Where they disagree, `docs/UPDATES.md` is newer. Read the relevant sections of both before building a feature.
 
 ## Stack
 
@@ -33,4 +33,4 @@ A single-player RPG where an LLM Dungeon Master improvises story and rulings on 
 
 ## Current milestone
 
-Milestones 0 to 2 are merged: the DM loop with dice and code-owned state (items, HP, NPCs, flags, scenes) is playable on Vercel. Saves are still in the browser; moving them to a server database is a deferred part of Milestone 2 that needs a database set up in Vercel. Milestone 3 (leveling, skills, spells, traits and the character sheet) is merged. Turns stream to the browser (`src/dm/stream.ts`) so dice roll while the DM writes. Next is Milestone 4: generated portraits and scene art.
+Milestones 0 to 2 are merged: the DM loop with dice and code-owned state (items, HP, NPCs, flags, scenes) is playable on Vercel. Saves live on the server (Upstash Redis via `src/server/saves.ts` and `/api/games`) when `KV_REST_API_URL`/`KV_REST_API_TOKEN` are set, and fall back to the browser when they aren't. Milestone 3 (leveling, skills, spells, traits and the character sheet) is merged. Turns stream to the browser (`src/dm/stream.ts`) so dice roll while the DM writes. Playtest fixes from `docs/UPDATES.md` are in progress: failure and difficulty rules plus stat and skill one-liners, then archetypes (Warrior, Rogue, Mage) with grounded stamina abilities for warriors and rogues and spells for mages, all in one catalog (`ABILITIES` in `src/engine/progression.ts`). Next, in order: the "Something else" generated archetype; the composer with ability and inventory selectors; chat bubbles for dialogue; then Milestone 4 reshaped as a preset image library. No suggestion chips.

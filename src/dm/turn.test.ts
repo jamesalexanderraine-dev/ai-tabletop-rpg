@@ -23,7 +23,7 @@ function stubDm(calls: Array<[string, unknown]>, narration = "The lock clicks op
 describe("playTurn", () => {
   it("records the player's move, engine rolls and the narration", async () => {
     const { dm, seen } = stubDm([["roll_check", { stat: "agility", difficulty: "medium", reason: "pick the lock" }]]);
-    const { state, turn } = await playTurn(newGame(), "I pick the lock with a fishbone", dm, face(15));
+    const { state, turn } = await playTurn(newGame("mage"), "I pick the lock with a fishbone", dm, face(15));
 
     expect(seen.results).toEqual([{ content: expect.stringContaining("success"), isError: false }]);
     expect(turn.player).toBe("I pick the lock with a fishbone");
@@ -38,7 +38,7 @@ describe("playTurn", () => {
       ["roll_check", { stat: "charisma", difficulty: "easy", reason: "smile" }],
       ["teleport", { to: "the moon" }],
     ]);
-    const { turn } = await playTurn(newGame(), "I smile at the guard", dm, face(10));
+    const { turn } = await playTurn(newGame("mage"), "I smile at the guard", dm, face(10));
     expect(seen.results.map((r) => r.isError)).toEqual([true, true]);
     expect(turn.rolls).toEqual([]);
   });
@@ -46,7 +46,7 @@ describe("playTurn", () => {
   it("stops a dice storm after the per-turn cap", async () => {
     const roll = ["roll_check", { stat: "luck", difficulty: "easy", reason: "again" }] as [string, unknown];
     const { dm, seen } = stubDm([roll, roll, roll, roll]);
-    const { turn } = await playTurn(newGame(), "I keep rolling", dm, face(10));
+    const { turn } = await playTurn(newGame("mage"), "I keep rolling", dm, face(10));
     expect(turn.rolls).toHaveLength(3);
     expect(seen.results.at(-1)?.isError).toBe(true);
   });
@@ -56,17 +56,17 @@ describe("playTurn", () => {
       ["remember", { about: "name", text: "Bramble" }],
       ["remember", { about: "backstory", text: "Wears a loaf of bread as a hat." }],
     ]);
-    const first = await playTurn(newGame(), "I'm Bramble, and yes, that's bread on my head", dm);
+    const first = await playTurn(newGame("mage"), "I'm Bramble, and yes, that's bread on my head", dm);
     expect(first.state.character).toMatchObject({ name: "Bramble", backstory: ["Wears a loaf of bread as a hat."] });
 
     const next = stubDm([]);
     await playTurn(first.state, "I tip my bread hat to the guard", next.dm);
-    expect(next.seen.input?.stateSummary).toContain("Character: Bramble.");
+    expect(next.seen.input?.stateSummary).toContain("Character: Bramble, a mage.");
     expect(next.seen.input?.stateSummary).toContain("Wears a loaf of bread as a hat.");
   });
 
   it("sends the DM a short window of history, not the full transcript", async () => {
-    let game = newGame();
+    let game = newGame("mage");
     for (let i = 0; i < HISTORY_WINDOW + 5; i++) {
       game = appendTurn(game, { player: `move ${i}`, narration: `result ${i}`, rolls: [], changes: [] });
     }
@@ -82,7 +82,7 @@ describe("playTurn", () => {
       ["add_item", { name: "Bread hat", tags: ["edible", "ridiculous", "worn"] }],
       ["update_npc", { name: "Old Tamsin", attitude: "neutral" }],
     ]);
-    const first = await playTurn(newGame(), "I wear the bread as a hat", dm);
+    const first = await playTurn(newGame("mage"), "I wear the bread as a hat", dm);
     expect(first.turn.changes).toEqual([
       { kind: "item", text: "Gained Bread hat (edible, ridiculous, worn)" },
       { kind: "npc", text: "Old Tamsin \u00b7 unfriendly \u2192 neutral" },
@@ -99,7 +99,7 @@ describe("playTurn", () => {
   });
 
   it("asks for a story summary every 10 turns, and stops asking once it's written", async () => {
-    let state = newGame();
+    let state = newGame("mage");
     for (let i = 0; i < 9; i++) state = (await playTurn(state, `step ${i}`, stubDm([]).dm)).state;
     const due = stubDm([["update_story", { summary: "Bramble has been pacing the cell." }]]);
     state = (await playTurn(state, "I pace", due.dm)).state;
@@ -117,7 +117,7 @@ describe("playTurn", () => {
       ["roll_check", { stat: "might", difficulty: "hard", reason: "shoulder the door" }],
       ["roll_check", { stat: "charm", difficulty: "easy", reason: "bad stat" }],
     ]);
-    await playTurn(newGame(), "I shoulder the door", dm, face(12), { onRoll: (r) => seenRolls.push(r.roll) });
+    await playTurn(newGame("mage"), "I shoulder the door", dm, face(12), { onRoll: (r) => seenRolls.push(r.roll) });
     expect(seenRolls).toEqual([12]);
   });
 });

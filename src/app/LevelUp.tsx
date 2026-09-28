@@ -8,22 +8,36 @@ import {
   autoLevelUpChoice,
   availableTraits,
   HP_PER_LEVEL,
-  learnableSpells,
+  abilityNoun,
+  archetypeInfo,
+  ENERGY_PER_LEVEL,
+  learnableAbilities,
   levelUpNeeds,
   MAX_SKILL_RANK,
   MAX_STAT,
-  MP_PER_LEVEL,
   pendingLevelUps,
   SKILLS,
+  statInfo,
   type LevelUpChoice,
 } from "@/engine/progression";
-import { formatMod, Pips, SheetFrame, SpellText } from "./Sheet";
+import { AbilityText, formatMod, Pips, SheetFrame } from "./Sheet";
 
-const emptyChoice = (): LevelUpChoice => ({ skills: {}, spell: null, stat: null, trait: null });
+const emptyChoice = (): LevelUpChoice => ({ skills: {}, ability: null, stat: null, trait: null });
 
 // The level-up screen: the storyteller can tap "Choose for me" and carry on,
 // the min-maxer can pore over every pick. The engine validates the result.
-export function LevelUp({ game, onApply, onClose }: { game: GameState; onApply: (next: GameState) => void; onClose: () => void }) {
+// onApply saves the level-up (on the server when saves live there) and returns
+// the saved state, or throws with a message to show.
+export function LevelUp({
+  game,
+  onApply,
+  onClose,
+}: {
+  game: GameState;
+  onApply: (next: GameState, choice: LevelUpChoice) => Promise<GameState>;
+  onClose: () => void;
+}) {
+  const [saving, setSaving] = useState(false);
   const [choice, setChoice] = useState<LevelUpChoice>(emptyChoice);
   const [error, setError] = useState<string | null>(null);
   const needs = levelUpNeeds(game);
@@ -32,7 +46,7 @@ export function LevelUp({ game, onApply, onClose }: { game: GameState; onApply: 
   const c = game.character;
   const spent = Object.values(choice.skills).reduce((a, b) => a + b, 0);
   const left = needs.skillPoints - spent;
-  const complete = left === 0 && (!needs.spell || choice.spell) && (!needs.stat || choice.stat) && (!needs.trait || choice.trait);
+  const complete = left === 0 && (!needs.ability || choice.ability) && (!needs.stat || choice.stat) && (!needs.trait || choice.trait);
 
   function adjust(id: string, delta: number) {
     const current = choice.skills[id] ?? 0;
@@ -41,22 +55,29 @@ export function LevelUp({ game, onApply, onClose }: { game: GameState; onApply: 
     setChoice({ ...choice, skills: { ...choice.skills, [id]: next } });
   }
 
-  function confirm() {
+  async function confirm() {
     const outcome = applyLevelUp(game, choice);
     if (!outcome.ok) {
       setError(outcome.error);
       return;
     }
-    setChoice(emptyChoice());
-    setError(null);
-    onApply(outcome.state);
-    if (pendingLevelUps(outcome.state) === 0) onClose();
+    setSaving(true);
+    try {
+      const saved = await onApply(outcome.state, choice);
+      setChoice(emptyChoice());
+      setError(null);
+      if (pendingLevelUps(saved) === 0) onClose();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Couldn't save the level-up. Try again.");
+    } finally {
+      setSaving(false);
+    }
   }
 
   return (
     <SheetFrame title={`Level ${needs.level}`} onClose={onClose}>
       <p className="sheet-line">
-        +{HP_PER_LEVEL} max HP, +{MP_PER_LEVEL} max MP
+        +{HP_PER_LEVEL} max HP, +{ENERGY_PER_LEVEL} max {archetypeInfo(c.archetype).pool === "MP" ? "MP" : "stamina"}
         {pendingLevelUps(game) > 1 && <span className="muted"> · {pendingLevelUps(game) - 1} more level-up after this</span>}
       </p>
       <button type="button" className="auto" onClick={() => setChoice(autoLevelUpChoice(game) ?? emptyChoice())}>
@@ -75,9 +96,9 @@ export function LevelUp({ game, onApply, onClose }: { game: GameState; onApply: 
               return (
                 <li key={s.id} className={added ? "picked" : undefined}>
                   <span>
-                    {s.name} <span className="muted small">{capitalize(s.stat)}</span>
+                    {s.name} <span className="muted small">{capitalize(s.stat)}</span> <Pips rank={base + added} />
                     <br />
-                    <Pips rank={base + added} />
+                    <span className="muted small">{s.description}</span>
                   </span>
                   <span className="stepper">
                     <button type="button" aria-label={`Remove a point from ${s.name}`} disabled={!added} onClick={() => adjust(s.id, -1)}>
@@ -99,13 +120,13 @@ export function LevelUp({ game, onApply, onClose }: { game: GameState; onApply: 
         </>
       )}
 
-      {needs.spell && (
+      {needs.ability && (
         <>
-          <h3>Learn a spell</h3>
+          <h3>Learn {abilityNoun(c.archetype) === "spell" ? "a spell" : "an ability"}</h3>
           <ul className="rows choices" role="radiogroup">
-            {learnableSpells(game, needs.level).map((s) => (
-              <Choice key={s.id} selected={choice.spell === s.id} onSelect={() => setChoice({ ...choice, spell: s.id })}>
-                <SpellText spell={s} />
+            {learnableAbilities(game, needs.level).map((a) => (
+              <Choice key={a.id} selected={choice.ability === a.id} onSelect={() => setChoice({ ...choice, ability: a.id })}>
+                <AbilityText ability={a} archetype={c.archetype} />
               </Choice>
             ))}
           </ul>
@@ -134,6 +155,11 @@ export function LevelUp({ game, onApply, onClose }: { game: GameState; onApply: 
               </button>
             ))}
           </div>
+          <p className="muted small stat-hint">
+            {choice.stat
+              ? `${statInfo(choice.stat).name}: ${statInfo(choice.stat).description}`
+              : "Tap a stat to see what it covers."}
+          </p>
         </>
       )}
 
@@ -161,7 +187,7 @@ export function LevelUp({ game, onApply, onClose }: { game: GameState; onApply: 
           {error}
         </p>
       )}
-      <button type="button" className="confirm" disabled={!complete} onClick={confirm}>
+      <button type="button" className="confirm" disabled={!complete || saving} onClick={confirm}>
         Become level {needs.level}
       </button>
     </SheetFrame>

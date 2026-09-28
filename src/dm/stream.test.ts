@@ -13,7 +13,7 @@ async function readAll(stream: ReadableStream<Uint8Array>): Promise<TurnStreamEv
 
 describe("turnEventStream", () => {
   it("sends rolls and text as they happen, then the finished turn", async () => {
-    const state = newGame();
+    const state = newGame("mage");
     const turn = { player: "x", narration: "Done.", rolls: [], changes: [] };
     const events = await readAll(
       turnEventStream(async (on) => {

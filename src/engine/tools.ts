@@ -26,7 +26,7 @@ import {
   type GameState,
   type Roll,
 } from "./game";
-import { MAX_SKILL_RANK, MAX_TRAITS, SKILLS, spellInfo } from "./progression";
+import { abilityInfo, abilityNoun, archetypeInfo, MAX_SKILL_RANK, MAX_TRAITS, SKILLS } from "./progression";
 
 export const DM_TOOL_NAMES = [
   "roll_check",
@@ -39,14 +39,14 @@ export const DM_TOOL_NAMES = [
   "update_npc",
   "move_scene",
   "update_story",
-  "cast_spell",
+  "use_ability",
   "grant_trait",
 ] as const;
 export type DmToolName = (typeof DM_TOOL_NAMES)[number];
 
 export const MAX_HP_CHANGE = 20;
 export const MAX_XP_GAIN = 100;
-export const MAX_MP_CHANGE = 20;
+export const MAX_ENERGY_CHANGE = 20;
 
 export interface ToolContext {
   rollsSoFar: number;
@@ -104,6 +104,9 @@ function oneOf<T extends string>(input: Record<string, unknown>, key: string, op
 
 const sameName = (a: string, b: string) => a.toLowerCase() === b.toLowerCase();
 
+// "MP" for mages, "stamina" for warriors and rogues.
+export const poolLabel = (archetype: GameState["character"]["archetype"]) => archetypeInfo(archetype).pool;
+
 export function applyDmTool(state: GameState, name: string, rawInput: unknown, ctx: ToolContext): ToolApplied {
   if (!(DM_TOOL_NAMES as readonly string[]).includes(name)) return fail(`There is no tool called "${name}".`);
   if (!isRecord(rawInput)) return fail(`${name} needs an object of arguments.`);
@@ -154,12 +157,12 @@ const HANDLERS: Record<DmToolName, Handler> = {
 
   update_character(state, input) {
     const hpChange = int(input, "hp_change", -MAX_HP_CHANGE, MAX_HP_CHANGE) ?? 0;
-    const mpChange = int(input, "mp_change", -MAX_MP_CHANGE, MAX_MP_CHANGE) ?? 0;
+    const energyChange = int(input, "energy_change", -MAX_ENERGY_CHANGE, MAX_ENERGY_CHANGE) ?? 0;
     const xpGain = int(input, "xp_gain", 0, MAX_XP_GAIN) ?? 0;
     const add = labels(input, "add_conditions", MAX_CONDITIONS);
     const remove = labels(input, "remove_conditions", MAX_CONDITIONS);
-    if (!hpChange && !mpChange && !xpGain && !add.length && !remove.length) {
-      return fail("update_character needs at least one of hp_change, mp_change, xp_gain, add_conditions or remove_conditions.");
+    if (!hpChange && !energyChange && !xpGain && !add.length && !remove.length) {
+      return fail("update_character needs at least one of hp_change, energy_change, xp_gain, add_conditions or remove_conditions.");
     }
     const c = state.character;
     const missing = remove.filter((r) => !c.conditions.includes(r));
@@ -170,21 +173,22 @@ const HANDLERS: Record<DmToolName, Handler> = {
     if (conditions.length > MAX_CONDITIONS) return fail(`At most ${MAX_CONDITIONS} conditions at once. Remove some first.`);
 
     const hp = Math.min(c.maxHp, Math.max(0, c.hp + hpChange));
-    const mp = Math.min(c.maxMp, Math.max(0, c.mp + mpChange));
+    const energy = Math.min(c.maxEnergy, Math.max(0, c.energy + energyChange));
+    const pool = poolLabel(c.archetype);
     const notes: string[] = [];
     if (hp !== c.hp) notes.push(`HP ${c.hp} → ${hp}`);
-    if (mp !== c.mp) notes.push(`MP ${c.mp} → ${mp}`);
+    if (energy !== c.energy) notes.push(`${pool} ${c.energy} → ${energy}`);
     if (xpGain) notes.push(`+${xpGain} XP`);
     const gained = conditions.filter((x) => !c.conditions.includes(x));
     if (gained.length) notes.push(`now ${gained.join(", ")}`);
     if (remove.length) notes.push(`no longer ${remove.join(", ")}`);
 
-    const character = { ...c, hp, mp, xp: c.xp + xpGain, conditions };
+    const character = { ...c, hp, energy, xp: c.xp + xpGain, conditions };
     const down = hp === 0 ? " The character is at 0 HP and down: choose a consequence (flee, capture, a lasting wound) rather than a clean death." : "";
     return {
       ok: true,
       state: { ...state, character },
-      message: `HP ${hp}/${c.maxHp}, MP ${mp}/${c.maxMp}, XP ${character.xp}, conditions: ${conditions.join(", ") || "none"}.${down}`,
+      message: `HP ${hp}/${c.maxHp}, ${pool} ${energy}/${c.maxEnergy}, XP ${character.xp}, conditions: ${conditions.join(", ") || "none"}.${down}`,
       change: notes.length ? { kind: "vitals", text: notes.join(" · ") } : undefined,
     };
   },
@@ -293,23 +297,34 @@ const HANDLERS: Record<DmToolName, Handler> = {
     };
   },
 
-  cast_spell(state, input) {
-    const id = text(input, "spell", MAX_NAME_LENGTH);
+  use_ability(state, input) {
+    const id = text(input, "ability", MAX_NAME_LENGTH);
     const c = state.character;
-    const spell = spellInfo(id) ?? spellInfo(id.toLowerCase().replace(/[^a-z]+/g, "_"));
-    if (!spell || !c.spells.includes(spell.id)) {
-      const known = c.spells.map((s) => spellInfo(s)?.name ?? s).join(", ") || "none";
-      return fail(`The player doesn't know "${id}". Known spells: ${known}. Narrate the attempt fizzling, or treat it as a non-magical try.`);
+    const pool = poolLabel(c.archetype);
+    const noun = abilityNoun(c.archetype);
+    const ability = abilityInfo(id) ?? abilityInfo(id.toLowerCase().replace(/[^a-z]+/g, "_").replace(/^_+|_+$/g, ""));
+    const known = c.abilities.map((a) => abilityInfo(a)?.name ?? a);
+    if (!ability || !c.abilities.includes(ability.id)) {
+      return fail(
+        `The player doesn't have the ${noun} "${id}". Their ${noun === "spell" ? "spells" : "abilities"}: ${known.join(", ") || "none"}. ` +
+          "Treat it as an ordinary attempt, with a roll if it's uncertain.",
+      );
     }
-    if (c.mp < spell.cost) {
-      return fail(`${spell.name} costs ${spell.cost} MP and the player has ${c.mp}. The magic sputters out.`);
+    if (c.energy < ability.cost) {
+      return fail(
+        `${ability.name} costs ${ability.cost} ${pool} and the player has ${c.energy}. ` +
+          (c.archetype === "mage" ? "The magic sputters out." : "They're too spent to pull it off; narrate them falling short."),
+      );
     }
-    const mp = c.mp - spell.cost;
+    const energy = c.energy - ability.cost;
+    const verb = c.archetype === "mage" ? "Cast" : "Used";
     return {
       ok: true,
-      state: { ...state, character: { ...c, mp } },
-      message: `${spell.name} cast (MP ${mp}/${c.maxMp}). Effect: ${spell.description} Apply any healing or harm with update_character, and roll only if the outcome is still uncertain.`,
-      change: { kind: "spell", text: `Cast ${spell.name} · −${spell.cost} MP` },
+      state: { ...state, character: { ...c, energy } },
+      message:
+        `${ability.name} ${verb.toLowerCase()} (${pool} ${energy}/${c.maxEnergy}). What it does: ${ability.description} ` +
+        "It achieves what it describes, even beyond what an ordinary person could manage. Apply any healing or harm with update_character, and roll only if the outcome is still uncertain beyond what the ability covers (then give +2 for it).",
+      change: { kind: "spell", text: `${verb} ${ability.name} · −${ability.cost} ${pool}` },
     };
   },
 
