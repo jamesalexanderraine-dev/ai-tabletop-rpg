@@ -3,7 +3,7 @@
 > Snapshot of the living doc from playtesting (created 2026-09-26): https://claude.ai/artifact/5osCBPeKd1rBpcdsMMevs6
 > It refines and in places overrides `docs/DESIGN.md`. The living doc is the source of truth; if they disagree, ask before building.
 > Clarified by James on 2026-09-27: "no tappable chips" means no suggestion chips; the ability chips in the composer (below) stay. On failure: in general the story should progress forward, but a failure is a real failure with real consequences. Sometimes a failure may just have to derail the story, but the ideal is to progress the story by letting the player establish alternate routes in the face of a failure, never by making the failure a success.
-> Clarified on 2026-09-27: warrior and rogue abilities are not once per day. They work like spells, with a stamina cost instead of mana, but are not supernatural in the world. Where this doc mentions once-per-day cooldowns, read stamina cost instead.
+> Clarified on 2026-09-27: warrior and rogue abilities are not once per day. They work like spells, with a stamina cost instead of mana, usable as long as you have the stamina, but are not supernatural in the world. (The living doc is updated to match.)
 
 ## Core gameplay — working, protect it
 
@@ -54,7 +54,7 @@ Borrow the **composer input** (the LLM-chat input box with the submit button ins
 Each selectable isn't just a name — it shows whether you can use it *right now*:
 
 - A spell shows its **mana cost** and whether you can currently afford it.
-- A once-per-day trait / special ability shows its **cooldown state** — whether you've already spent it today.
+- A warrior's or rogue's ability shows its **stamina cost** and whether you have enough stamina to use it right now. Abilities work like spells, just not supernatural: no once-per-day cooldowns, you can use them as long as you have the stamina.
 
 So the selector answers both "what can I do?" and "can I actually do it right now?" in one glance — an affordance a raw text box can't give.
 
@@ -65,11 +65,11 @@ Selecting an ability drops it into the input as a **reference / chip** (like sel
 - **Woven in:** "I bash the door with my shield" — the ability is explicit in the narration.
 - **Chip + short verb:** drop the *shield bash* chip in, then type "attack" — the chip's presence implies the attack is a shield bash.
 
-**Bonus — removes ambiguity for the LLM.** When the chip is explicitly present, the game knows exactly which ability is being invoked, so it can deduct mana, mark a once-per-day trait spent, and apply the right mechanics with confidence — instead of guessing whether "I hit him hard" was a basic attack or a special move. The chip removes the doubt while still letting the player write freely around it.
+**Bonus — removes ambiguity for the LLM.** When the chip is explicitly present, the game knows exactly which ability is being invoked, so it can deduct mana or stamina and apply the right mechanics with confidence — instead of guessing whether "I hit him hard" was a basic attack or a special move. The chip removes the doubt while still letting the player write freely around it.
 
 **The chip is a convenience, not a requirement.** You don't have to specify an ability to use it. If you type "I bash the guard with my shield" with no chip attached, the LLM should still recognize that as *shield bash* and apply it — exactly like Claude can invoke a skill because the request calls for it, without you naming the skill. The ability catalog is always live to the model, and natural language alone can trigger any of it. Specifying via the chip just makes it explicit: it removes ambiguity when you want certainty, and it doubles as a way to browse what you can do. It's a shortcut, never a gate.
 
-**Implication:** the system must reliably recognize an *unspecified* ability and apply the same mechanics — deduct mana, mark the cooldown — as it would for the chip. Otherwise freeform narration ("I bash with my shield") becomes a loophole that dodges the cost the chip would charge. Implicit and explicit use must resolve to identical mechanics.
+**Implication:** the system must reliably recognize an *unspecified* ability and apply the same mechanics — deduct mana or stamina — as it would for the chip. Otherwise freeform narration ("I bash with my shield") becomes a loophole that dodges the cost the chip would charge. Implicit and explicit use must resolve to identical mechanics.
 
 ## Onboarding & archetypes
 
