@@ -33,7 +33,7 @@ import {
 import { StartScreen } from "./StartScreen";
 import { DiceRoll } from "./Dice";
 import { LevelUp } from "./LevelUp";
-import { Bubble, Narration } from "./Narration";
+import { Narration } from "./Narration";
 import { CharacterSheet, Meter } from "./Sheet";
 import { readTurnEvents } from "./turnStream";
 
@@ -377,11 +377,12 @@ export default function Game() {
   );
 }
 
-// What the player did, in their own bubble, with any chips they attached.
+// What the player typed, as a pull quote, with any chips they attached. (Only
+// lines the DM gives their character go in a speech bubble.)
 function PlayerLine({ text, ability, items, game }: { text: string; ability?: string; items?: string[]; game: GameState }) {
   const abilityName = ability ? (abilityFor(game.character, ability)?.name ?? ability) : null;
   return (
-    <Bubble who={game.character.name ?? "You"} tone="you" you>
+    <p className="player">
       {abilityName && (
         <span className={poolOf(game.character) === "MP" ? "chip ability mp" : "chip ability"}>
           <span aria-hidden>{"\u2726"}</span> {abilityName}
@@ -393,7 +394,7 @@ function PlayerLine({ text, ability, items, game }: { text: string; ability?: st
         </span>
       ))}
       {text}
-    </Bubble>
+    </p>
   );
 }
 

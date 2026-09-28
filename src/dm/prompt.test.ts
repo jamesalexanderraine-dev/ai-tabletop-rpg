@@ -29,7 +29,7 @@ describe("SYSTEM_PROMPT", () => {
 
   it("asks for dialogue in say tags the story can turn into bubbles, and shows the format working", () => {
     expect(SYSTEM_PROMPT).toContain('<say who="Name">');
-    expect(SYSTEM_PROMPT).toContain("Never put the player's own words in a say tag");
+    expect(SYSTEM_PROMPT).toContain('<say who="You">');
     // The opening scene uses the same format, so the first thing the player sees is a bubble.
     const opening = parseNarration(newGame("rogue").turns[0]!.narration);
     expect(opening.at(-1)).toMatchObject({ kind: "speech", who: "The dark elf", text: expect.stringContaining("Who are you") });

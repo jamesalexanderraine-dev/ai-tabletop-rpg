@@ -993,30 +993,75 @@ textarea {
   margin-top: 1rem;
 }
 
-/* Dialogue as chat bubbles: a face and a name for every speaker, coloured by
-   which side they're on. The player's own lines sit on the right. */
+/* What the player typed: a pull quote, as before the bubbles. */
+.player {
+  margin: 0 0 0.6rem;
+  padding-left: 0.8rem;
+  border-left: 2px solid var(--accent);
+  font-style: italic;
+  color: var(--muted);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.player .chip {
+  margin-right: 0.35rem;
+  vertical-align: 0.05em;
+}
+
+/* Dialogue as chat bubbles: the speaker's face and name above the bubble,
+   coloured by which side they're on. Lines the DM gives the player's own
+   character sit on the right. */
 .say {
   display: flex;
-  align-items: flex-end;
-  gap: 0.5rem;
-  margin: 0 0 0.8rem;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.25rem;
+  margin: 0 0 0.9rem;
 }
 
 .say.you {
-  justify-content: flex-end;
+  align-items: flex-end;
+}
+
+.speaker {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.85rem;
+  font-variant: small-caps;
+  letter-spacing: 0.05em;
+  color: var(--muted);
+}
+
+.say.you .speaker {
+  flex-direction: row-reverse;
+  color: var(--accent);
+}
+
+.say.friendly .speaker,
+.say.allied .speaker {
+  color: var(--win);
+}
+
+.say.unfriendly .speaker,
+.say.hostile .speaker {
+  color: var(--lose);
 }
 
 .avatar {
   flex: none;
   display: grid;
   place-items: center;
-  width: 2rem;
-  height: 2rem;
+  width: 1.8rem;
+  height: 1.8rem;
   border-radius: 50%;
   background: var(--muted);
   color: var(--bg);
+  font-variant: normal;
+  letter-spacing: 0;
   font-weight: 700;
-  font-size: 0.95rem;
+  font-size: 0.9rem;
 }
 
 .say.friendly .avatar,
@@ -1036,48 +1081,19 @@ textarea {
 .bubble {
   max-width: 85%;
   min-width: 0;
-  padding: 0.45rem 0.8rem 0.55rem;
+  margin-left: 0.9rem;
+  padding: 0.5rem 0.8rem;
   border: 1px solid var(--rule);
-  border-radius: 1rem 1rem 1rem 0.3rem;
+  border-radius: 0.3rem 1rem 1rem 1rem;
   background: var(--panel);
-}
-
-.say.you .bubble {
-  border-radius: 1rem 1rem 0.3rem 1rem;
-  background: color-mix(in srgb, var(--accent) 9%, var(--bg));
-  border-color: color-mix(in srgb, var(--accent) 30%, var(--rule));
-}
-
-.speaker {
-  display: block;
-  font-size: 0.8rem;
-  font-variant: small-caps;
-  letter-spacing: 0.05em;
-  color: var(--muted);
-}
-
-.say.friendly .speaker,
-.say.allied .speaker {
-  color: var(--win);
-}
-
-.say.unfriendly .speaker,
-.say.hostile .speaker {
-  color: var(--lose);
-}
-
-.say.you .speaker {
-  color: var(--accent);
-}
-
-.bubble .words {
-  display: block;
   font-size: 1.05rem;
   white-space: pre-wrap;
   overflow-wrap: anywhere;
 }
 
-.bubble .chip {
-  margin-right: 0.35rem;
-  vertical-align: 0.05em;
+.say.you .bubble {
+  margin: 0 0.9rem 0 0;
+  border-radius: 1rem 0.3rem 1rem 1rem;
+  background: color-mix(in srgb, var(--accent) 9%, var(--bg));
+  border-color: color-mix(in srgb, var(--accent) 30%, var(--rule));
 }

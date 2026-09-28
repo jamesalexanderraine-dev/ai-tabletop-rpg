@@ -20,23 +20,24 @@ function initial(who: string): string {
   return (who.replace(/^the\s+/i, "").trim()[0] ?? "?").toUpperCase();
 }
 
+// Lines the DM gives the player's own character: who="You" or their name.
+function isPlayer(game: GameState, who: string): boolean {
+  const name = who.trim().toLowerCase();
+  return name === "you" || name === game.character.name?.toLowerCase();
+}
+
+// A spoken line: the speaker's face and name sit above the bubble, which holds
+// only the words. The player's character speaks from the right.
 export function Bubble({ who, tone, you = false, children }: { who: string; tone: string; you?: boolean; children: ReactNode }) {
   return (
     <div className={you ? "say you" : `say ${tone}`}>
-      {!you && (
+      <div className="speaker">
         <span className="avatar" aria-hidden>
           {initial(who)}
         </span>
-      )}
-      <div className="bubble">
-        <span className="speaker">{who}</span>
-        <span className="words">{children}</span>
+        <span className="speaker-name">{who}</span>
       </div>
-      {you && (
-        <span className="avatar" aria-hidden>
-          {initial(who)}
-        </span>
-      )}
+      <div className="bubble">{children}</div>
     </div>
   );
 }
@@ -49,9 +50,15 @@ export function Narration({ text, game, opening = false }: { text: string; game:
         part.kind === "prose" ? (
           <p key={i}>{part.text}</p>
         ) : (
-          <Bubble key={i} who={part.who} tone={toneOf(game, part.who)}>
-            {part.text}
-          </Bubble>
+          isPlayer(game, part.who) ? (
+            <Bubble key={i} who={game.character.name ?? "You"} tone="you" you>
+              {part.text}
+            </Bubble>
+          ) : (
+            <Bubble key={i} who={part.who} tone={toneOf(game, part.who)}>
+              {part.text}
+            </Bubble>
+          )
         ),
       )}
     </div>
