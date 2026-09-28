@@ -225,8 +225,8 @@ function AbilitiesTab({ game }: { game: GameState }) {
       </ul>
       <p className="muted small">
         {mage
-          ? "To cast, just say so in the story: \u201cI cast Spark on the straw.\u201d"
-          : "To use one, just do it in the story: \u201cI heave the cart off him.\u201d It costs stamina whether or not you name it."}
+          ? "To cast, tap \u2726 Spells in the action bar, or just say so in the story: \u201cI cast Spark on the straw.\u201d"
+          : "To use one, tap \u2726 Abilities in the action bar, or just do it in the story: \u201cI heave the cart off him.\u201d It costs the same either way."}
       </p>
     </>
   );
@@ -283,7 +283,8 @@ function PeopleTab({ game }: { game: GameState }) {
     <ul className="people">
       {game.npcs.map((n) => (
         <li key={n.name}>
-          <strong>{n.name}</strong> <span className={`attitude ${n.attitude}`}>{n.attitude}</span>
+          <strong>{n.name}</strong> {n.role && <span className="speaker-role">{n.role}</span>}{" "}
+          <span className={`attitude ${n.attitude}`}>{n.attitude}</span>
           <br />
           <span className="muted">{n.note}</span>
         </li>

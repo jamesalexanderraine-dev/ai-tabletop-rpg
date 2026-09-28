@@ -51,7 +51,13 @@ export interface Turn {
   narration: string;
   rolls: Roll[];
   changes: Change[];
+  // Chips the player attached in the composer: an ability (by id) the engine
+  // applied up front, and items from their pack they're using.
+  ability?: string;
+  items?: string[];
 }
+
+export const MAX_ITEM_CHIPS = 3;
 
 export interface Trait {
   name: string;
@@ -92,7 +98,12 @@ export interface Npc {
   name: string;
   attitude: Attitude;
   note: string;
+  // Who they are to the player, in a word or two ("Cellmate", "Innkeeper"),
+  // shown beside their name when they speak. Missing on older saves.
+  role?: string;
 }
+
+export const MAX_ROLE_LENGTH = 24;
 
 export interface Scene {
   name: string;
@@ -137,9 +148,17 @@ export const OPENING_SCENE: Scene = {
     "A damp stone corridor of iron-doored cells, lit by one guttering torch. Wet straw on the floors. The guard's stool and keys are at the far end.",
 };
 
+// Saves from before roles existed: the opening pair get theirs back. Anyone else
+// without one is flagged to the DM, who fills it in (see buildStateSummary).
+function withKnownRole(npc: Npc): Npc {
+  if (npc.role) return npc;
+  const opening = OPENING_NPCS.find((o) => o.name === npc.name);
+  return opening?.role ? { ...npc, role: opening.role } : npc;
+}
+
 export const OPENING_NPCS: Npc[] = [
-  { name: "Sereth", attitude: "neutral", note: "Sharp-tongued dark elf thief in the cell opposite. Wants out and trades help for help." },
-  { name: "Old Tamsin", attitude: "unfriendly", note: "Bored dungeon guard who hums badly. Keeps the cell keys on his belt." },
+  { name: "Sereth", role: "Cellmate", attitude: "neutral", note: "Sharp-tongued dark elf thief in the cell opposite. Wants out and trades help for help." },
+  { name: "Old Tamsin", role: "Jailer", attitude: "unfriendly", note: "Bored dungeon guard who hums badly. Keeps the cell keys on his belt." },
 ];
 
 // The same prison for everyone, with one line that shows each archetype what it
@@ -153,11 +172,12 @@ export function openingNarration(info: ArchetypeInfo): string {
   );
 }
 
+// Sereth speaks in a bubble (see narration.ts); the player doesn't know her name yet.
 const OPENING_QUESTION =
   "In the cell across the passage, a dark elf with a split lip leans against the bars and studies " +
-  "you with open curiosity. “Ah. The new one’s awake,” she says. “They dragged you in " +
-  "last night, and nobody could agree on what you’d done. So. Who are you, and how did you end " +
-  "up down here?”";
+  "you with open curiosity.\n\n" +
+  '<say who="The dark elf" npc="Sereth">Ah. The new one’s awake. They dragged you in last night, and nobody could ' +
+  "agree on what you’d done. So. Who are you, and how did you end up down here?</say>";
 
 // A new game for one of the three archetypes, or a generated one ("Something else").
 export function newGame(choice: BuiltInArchetype | CustomArchetype): GameState {
@@ -263,11 +283,15 @@ export function parseGameState(raw: unknown): GameState | null {
     if (!isText(t.narration, 20_000) || !Array.isArray(t.rolls) || !Array.isArray(t.changes)) return null;
     if (t.rolls.length > MAX_ROLLS_PER_TURN || !t.rolls.every(isRoll)) return null;
     if (t.changes.length > 40 || !t.changes.every(isChange)) return null;
+    if (!(t.ability === undefined || isText(t.ability, MAX_NAME_LENGTH))) return null;
+    if (!(t.items === undefined || isTextList(t.items, MAX_ITEM_CHIPS, MAX_NAME_LENGTH))) return null;
     parsedTurns.push({
       player: t.player as string | null,
       narration: t.narration as string,
       rolls: t.rolls.map((r: Roll) => ({ ...r, skill: r.skill ?? null, skillBonus: r.skillBonus ?? 0 })),
       changes: t.changes as Change[],
+      ...(t.ability !== undefined && { ability: t.ability as string }),
+      ...(t.items !== undefined && { items: t.items as string[] }),
     });
   }
 
@@ -288,7 +312,7 @@ export function parseGameState(raw: unknown): GameState | null {
     },
     stats: statsFor(who, build.statRaises),
     inventory: inventory as Item[],
-    npcs: npcs as Npc[],
+    npcs: (npcs as Npc[]).map(withKnownRole),
     flags: flags as Record<string, string>,
     scene: { name: scene.name as string, description: scene.description as string },
     story: { summary: story.summary as string, turn: story.turn as number },
@@ -448,7 +472,8 @@ function isNpc(v: unknown): v is Npc {
     isRecord(v) &&
     isText(v.name, MAX_NAME_LENGTH) &&
     (ATTITUDES as readonly unknown[]).includes(v.attitude) &&
-    isText(v.note, MAX_FACT_LENGTH)
+    isText(v.note, MAX_FACT_LENGTH) &&
+    (v.role === undefined || isText(v.role, MAX_ROLE_LENGTH))
   );
 }
 

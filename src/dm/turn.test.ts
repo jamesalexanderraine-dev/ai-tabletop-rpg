@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { prepareAction } from "@/engine/actions";
 import type { Rng } from "@/engine/dice";
 import { appendTurn, newGame } from "@/engine/game";
 import { HISTORY_WINDOW } from "./prompt";
@@ -21,6 +22,25 @@ function stubDm(calls: Array<[string, unknown]>, narration = "The lock clicks op
 }
 
 describe("playTurn", () => {
+  it("plays an ability chip: paid before the DM writes, shown first, remembered in history", async () => {
+    const game = { ...newGame("warrior"), inventory: [{ name: "Rope", tags: [] }] };
+    const action = prepareAction(game, { ability: "feat_of_strength", items: ["Rope"] });
+    if (!action.ok) throw new Error(action.error);
+    const { dm, seen } = stubDm([["use_ability", { ability: "feat_of_strength" }]], "The cart lifts.");
+    const { state, turn } = await playTurn(game, "lift", dm, face(10), {}, action.value);
+
+    expect(seen.input!.playerInput).toMatch(/already applied[\s\S]*Rope[\s\S]*\n\nlift$/);
+    expect(seen.input!.stateSummary).toContain("stamina 2/4");
+    // Calling it again anyway costs again: the engine applies what it's told.
+    expect(state.character.energy).toBe(0);
+    expect(turn).toMatchObject({ player: "lift", ability: "feat_of_strength", items: ["Rope"] });
+    expect(turn.changes[0]).toEqual({ kind: "spell", text: "Used Feat of Strength · −2 stamina" });
+
+    const next = stubDm([]);
+    await playTurn(state, "I tie the rope", next.dm);
+    expect(next.seen.input!.history.at(-1)!.player).toBe("[using Feat of Strength; with Rope] lift");
+  });
+
   it("records the player's move, engine rolls and the narration", async () => {
     const { dm, seen } = stubDm([["roll_check", { stat: "agility", difficulty: "medium", reason: "pick the lock" }]]);
     const { state, turn } = await playTurn(newGame("mage"), "I pick the lock with a fishbone", dm, face(15));

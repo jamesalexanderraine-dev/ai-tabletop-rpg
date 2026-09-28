@@ -15,6 +15,7 @@ import {
   MAX_ITEMS,
   MAX_NAME_LENGTH,
   MAX_NPCS,
+  MAX_ROLE_LENGTH,
   MAX_ROLLS_PER_TURN,
   MAX_SCENE_DESCRIPTION,
   MAX_SITUATIONAL_BONUS,
@@ -103,6 +104,7 @@ function oneOf<T extends string>(input: Record<string, unknown>, key: string, op
 }
 
 const sameName = (a: string, b: string) => a.toLowerCase() === b.toLowerCase();
+const capitalizeFirst = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
 
 // "MP" for magic users, "stamina" for everyone else.
 export const poolLabel = poolOf;
@@ -248,13 +250,14 @@ const HANDLERS: Record<DmToolName, Handler> = {
     const name = text(input, "name", MAX_NAME_LENGTH);
     const attitude = oneOf<Attitude>(input, "attitude", ATTITUDES);
     const note = text(input, "note", MAX_FACT_LENGTH);
+    const role = optionalText(input, "role", MAX_ROLE_LENGTH);
     if (state.npcs.some((n) => sameName(n.name, name))) return fail(`${name} already exists. Use update_npc.`);
     if (state.npcs.length >= MAX_NPCS) return fail("Too many named characters. Reuse an existing one.");
     return {
       ok: true,
-      state: { ...state, npcs: [...state.npcs, { name, attitude, note }] },
+      state: { ...state, npcs: [...state.npcs, { name, attitude, note, ...(role && { role: capitalizeFirst(role) }) }] },
       message: `${name} added.`,
-      change: { kind: "npc", text: `Met ${name} · ${attitude}` },
+      change: { kind: "npc", text: `Met ${name}${role ? `, ${role.toLowerCase()}` : ""} · ${attitude}` },
     };
   },
 
@@ -267,13 +270,18 @@ const HANDLERS: Record<DmToolName, Handler> = {
     }
     const attitude = input.attitude === undefined ? npc.attitude : oneOf<Attitude>(input, "attitude", ATTITUDES);
     const note = optionalText(input, "note", MAX_FACT_LENGTH) ?? npc.note;
-    const updated = { ...npc, attitude, note };
+    const newRole = optionalText(input, "role", MAX_ROLE_LENGTH);
+    const role = newRole ? capitalizeFirst(newRole) : npc.role;
+    const updated = { ...npc, attitude, note, ...(role && { role }) };
+    const shifts = [
+      ...(role !== npc.role ? [npc.role ? `${npc.role} → ${role}` : role!] : []),
+      ...(attitude !== npc.attitude ? [`${npc.attitude} → ${attitude}`] : []),
+    ];
     return {
       ok: true,
       state: { ...state, npcs: state.npcs.map((n) => (n === npc ? updated : n)) },
       message: `${npc.name} updated.`,
-      change:
-        attitude !== npc.attitude ? { kind: "npc", text: `${npc.name} · ${npc.attitude} → ${attitude}` } : undefined,
+      change: shifts.length ? { kind: "npc", text: `${npc.name} · ${shifts.join(", ")}` } : undefined,
     };
   },
 

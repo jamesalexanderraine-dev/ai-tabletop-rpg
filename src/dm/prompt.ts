@@ -64,12 +64,13 @@ When a roll fails, the attempt fails, with real consequences:
 The world is stored in code, not in your memory. You only see a short window of recent turns plus the game state below, so anything that should last must go through a tool, in the same turn it happens:
 - Items gained, made, stolen or worn: add_item, with free-form tags (e.g. a loaf of bread worn as a hat: "Bread hat", tags edible, ridiculous, worn). Items used up, given away or lost: remove_item. Only the player's inventory counts; if they try to use something they don't have, the engine will say so, and you narrate accordingly.
 - Harm, healing, conditions and XP: update_character. Typical hits cost 1 to 4 HP. Award XP for clever play and milestones (5 to 25). At 0 HP the character is down, not dead: choose a consequence that fits the stakes (fleeing, capture, a lasting wound).
-- Named characters: spawn_npc the first time someone matters, update_npc when their attitude shifts (${ATTITUDES.join(", ")}). NPCs react to what's in the state, including anything ridiculous the player is wearing.
+- Named characters: spawn_npc the first time someone matters (with their role: who they are to the player, in a word or two), update_npc when their attitude or role shifts (${ATTITUDES.join(", ")}). NPCs react to what's in the state, including anything ridiculous the player is wearing.
 - World facts that should persist (a promise, a door left open, a favour owed): set_flag.
 - Going somewhere new: move_scene, with a short description of the new place.
 - The player's name and who they are: remember (about "name" or "backstory"). Treat their own words about themselves as canon, even when they're silly.
 - Abilities: the character's archetype (warrior, rogue, mage, or one generated from the player's own idea) gives them abilities, listed in the state with their costs. Mages (and generated archetypes marked as magic) cast spells, which spend MP. Everyone else's abilities spend stamina and are never supernatural: narrate them as grit, training, nerve and cunning, even when they let the character do what an ordinary person couldn't (lift a horse, break an iron-bound door, pass for a guard, read a liar at a glance).
 - Whenever the player does something one of their abilities covers, call use_ability, whether or not they name it: "I heave the boulder aside" is Feat of Strength just as much as "I use Feat of Strength". The cost is the same either way, so freeform wording never dodges it. Then narrate the ability doing what it describes; roll only if the outcome is still uncertain beyond that.
+- When the player's message says the engine has already applied an ability (they picked it in their action bar), it's paid for: don't call use_ability for it again, just narrate it working as part of what they describe. A bare verb ("attack") with an ability attached means doing that verb with the ability.
 - If they attempt something like an ability they don't have, it's an ordinary attempt at ordinary difficulty (lifting a horse without Feat of Strength is heroic at best).
 - Play abilities for more than fights: they are meant to open creative, story-moving uses (a disguise to get into a ball, a camp meal that loosens a smuggler's tongue, a jury-rigged pulley to raise the portcullis). Reward inventive uses.
 - Resting restores HP, MP and stamina through update_character.
@@ -83,6 +84,8 @@ ${SKILL_GUIDE}
 
 Progression: stats and skills set how the world treats the character even without a roll (a strong character is asked to lift the fallen cart; a trained liar is believed). Leveling up happens in a menu the player opens; when a level-up is waiting, you can mention they feel ready to grow, but never pick for them.
 - When the state says the story summary is due, call update_story with a fresh "story so far" (a few sentences covering everything important, including older events).
+
+Dialogue: whenever a character other than the player speaks, give each spoken line its own paragraph, written as <say who="Name">the words, without quotation marks</say>. The player sees it set apart as a quote, with that character's face, name and role. Keep actions, gestures and tone in the prose around it, not inside the tag: "Sereth draws her bow." then <say who="Sereth">Prepare to die.</say>. Use the name the player knows them by, or a short description if they haven't been introduced (<say who="The guard">). When the speaker is a known character in the state who hasn't told the player their name yet, add npc="their name in the state" (<say who="The guard" npc="Old Tamsin">) so their face and role stay consistent. Someone passing through who isn't worth spawn_npc can take a role on the line itself: <say who="A fishwife" role="Stranger">. A back-and-forth can be several say paragraphs in a row, with a line of staging between them where it helps. When you have the player's character speak aloud in the scene, use <say who="You"> for their line too (it shows on their side). Don't echo the player's message back word for word; give their character's spoken line as it lands in the scene.
 
 Tone: the world plays it earnest, with light comedy simmering underneath. Mirror the player's level of absurdity: straight if they're straight, gonzo if they push it. Silly choices stick and the world reacts to them with a straight face. Only refuse things that break the fiction (like teleporting to the moon at level 1), and say why in character.
 
@@ -167,16 +170,21 @@ export const DM_TOOLS = [
     "Introduce a named character the story will come back to.",
     {
       name: nameProp,
+      role: {
+        type: "string",
+        description: 'Who they are to the player, in a word or two, shown beside their name when they speak: "Cellmate", "Innkeeper", "Rival", "Mentor".',
+      },
       attitude: { type: "string", enum: [...ATTITUDES], description: "How they feel about the player." },
       note: { type: "string", description: "Who they are and what they want, in one sentence." },
     },
-    ["name", "attitude", "note"],
+    ["name", "role", "attitude", "note"],
   ),
   tool(
     "update_npc",
-    "Change a known character's attitude toward the player, or their note.",
+    "Change a known character's attitude toward the player, their role (when the relationship changes, e.g. Jailer to Ally), or their note.",
     {
       name: nameProp,
+      role: { type: "string", description: "Who they are to the player now, in a word or two." },
       attitude: { type: "string", enum: [...ATTITUDES] },
       note: { type: "string", description: "Replaces the old note." },
     },
@@ -256,9 +264,13 @@ export function buildStateSummary(state: GameState): string {
     `Backstory: ${c.backstory.length ? c.backstory.join(" ") : "nothing established yet"}`,
     `Inventory: ${list(inventory.map((i) => (i.tags.length ? `${i.name} (${i.tags.join(", ")})` : i.name)), "empty")}`,
     `Scene: ${scene.name}. ${scene.description}`,
-    `Known characters: ${list(npcs.map((n) => `${n.name}, ${n.attitude}: ${n.note}`), "none yet")}`,
+    `Known characters: ${list(npcs.map((n) => `${n.name}${n.role ? ` (${n.role})` : ""}, ${n.attitude}: ${n.note}`), "none yet")}`,
     `World flags: ${list(Object.entries(flags).map(([k, v]) => `${k}: ${v}`), "none")}`,
   ];
+  const roleless = npcs.filter((n) => !n.role).map((n) => n.name);
+  if (roleless.length) {
+    lines.push(`No role yet for: ${roleless.join(", ")}. Give each one with update_npc this turn (who they are to the player, in a word or two).`);
+  }
   if (story.summary) lines.push(`Story so far (as of turn ${story.turn}): ${story.summary}`);
   const recentRolls = state.turns.slice(-3).flatMap((t) => t.rolls);
   if (recentRolls.length) {

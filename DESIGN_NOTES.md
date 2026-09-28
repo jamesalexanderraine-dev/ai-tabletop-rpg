@@ -2,6 +2,27 @@
 
 Short playtest notes, newest first. One entry per task: date, what changed, what felt good or bad, what to try next.
 
+## 2026-09-28: Speakers, roles, and your lines in a bubble
+
+- The DM now writes each spoken line as its own paragraph, `<say who="Sereth">Prepare to die.</say>`. Action and staging stay in the prose around it (docs/UPDATES.md, "Chat bubbles for dialogue").
+- Characters speak in pull quotes: face, name and role on a line above, then the words with a rule in their side's colour. Faces are initials until the image library, coloured by attitude: green friendly or allied, red unfriendly or hostile, grey neutral or unknown. This is James's call after trying bubbles for characters first.
+- What you type is a speech bubble on the right, with any chips inside. Lines the DM gives your character to say aloud (`<say who="You">`) are a pull quote like everyone else's.
+- Every character has a role, who they are to you in a word or two ("Cellmate", "Jailer", "Innkeeper"), shown beside their name and in the People tab. The DM sets it in spawn_npc and changes it with update_npc when the relationship shifts ("Jailer → Ally"). A passer-by who isn't worth spawning can take one on the line itself (`role="Stranger"`).
+- Old saves: Sereth and Old Tamsin get "Cellmate" and "Jailer" back on load. Anyone else without a role is listed to the DM, who is told to give each one this turn.
+- The opening line is "The dark elf", linked to Sereth (`npc="Sereth"`), so her colour and "Cellmate" label are right before you learn her name.
+- The parser (`src/engine/narration.ts`) works on half-written text, so quotes fill in as the DM writes and no raw tag ever shows. Anything malformed falls back to prose. Old turns without tags look as before.
+- Watch on the next playtest: does the DM tag every spoken line and fill in missing roles? Do roles read as helpful or as clutter?
+
+## 2026-09-28: The composer, with ability and pack chips
+
+- The input is now a chat-style composer: text on top, and a row with **✦ Abilities** (or **Spells**), **◆ Pack** and **Go** underneath.
+- ✦ opens a tray of known abilities with their cost. Ones you can't afford right now are greyed out ("needs 2 stamina, you have 0"). ◆ opens the pack, with tags.
+- Picking something drops a chip into the input (one ability, up to three items). Tap × to remove it. The chip then shows on your line in the story.
+- An ability chip is paid for by the engine before the DM writes a word (`src/engine/actions.ts`), and the DM is told it's already applied. So "chip + attack" costs exactly what "I bash him with my shield" does, and the chip is never left to the model's judgement. Typing it without a chip still works through `use_ability`, same as before.
+- Item chips are checked against the pack and passed to the DM as "using from their pack". Items that get used up drop out of the chips.
+- The composer is taller than the old input (about one row more), so check it feels OK with the keyboard up.
+- Watch on the next playtest: does the DM ever charge twice for a chipped ability? Do chips get used, or does everyone just type?
+
 ## 2026-09-28: Switching characters, and "Something else"
 
 - Tap your name in the header (or "Switch character" in the sheet) to see every saved character, jump straight into another, start a new one, or delete old ones. Needs server saves; with browser saves there's still one game at a time.
