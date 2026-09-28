@@ -26,7 +26,7 @@ const PRICES: Record<string, [number, number]> = {
 };
 
 // The server re-runs a declined turn on another model, for the models that support it.
-function supportsServerFallback(model: string): boolean {
+export function supportsServerFallback(model: string): boolean {
   return model.startsWith("claude-opus-5") || model.startsWith("claude-fable-5");
 }
 
@@ -52,14 +52,14 @@ function textOf(message: Message): string {
     .trim();
 }
 
-const defaultSend: SendMessage = (params, onText) => {
+export const defaultSend: SendMessage = (params, onText) => {
   // Trimmed so a stray space or newline pasted into a settings UI can't break auth.
   const stream = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY?.trim() }).beta.messages.stream(params);
   stream.on("text", (delta) => onText(delta));
   return stream.finalMessage();
 };
 
-interface Usage {
+export interface Usage {
   calls: number;
   input: number;
   output: number;
@@ -67,10 +67,10 @@ interface Usage {
   cacheWrite: number;
 }
 
-function logUsage(model: string, u: Usage) {
+export function logUsage(model: string, u: Usage, label = "DM turn usage") {
   const [inPrice, outPrice] = PRICES[model] ?? [NaN, NaN];
   const cost = (u.input * inPrice + u.cacheWrite * inPrice * 1.25 + u.cacheRead * inPrice * 0.1 + u.output * outPrice) / 1e6;
-  console.log("DM turn usage", JSON.stringify({ model, ...u, estimatedUsd: Number.isNaN(cost) ? null : cost.toFixed(4) }));
+  console.log(label, JSON.stringify({ model, ...u, estimatedUsd: Number.isNaN(cost) ? null : cost.toFixed(4) }));
 }
 
 export function createClaudeDm(options: { send?: SendMessage; model?: string } = {}): DungeonMaster {

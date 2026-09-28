@@ -3,11 +3,13 @@
 // which validate and apply them here, or return an error the DM can re-narrate.
 
 import { STATS, type CheckResult, type Difficulty, type Stat } from "./dice";
+import { parseCustomArchetype } from "./customArchetype";
 import {
   abilitiesAt,
-  abilityInfo,
+  abilityFor,
   ARCHETYPE_IDS,
   archetypeInfo,
+  archetypeOf,
   levelForXp,
   levelTraitsAt,
   MAX_SKILL_RANK,
@@ -20,6 +22,10 @@ import {
   STARTING_SKILL_POINTS,
   statRaisesAt,
   type Archetype,
+  type ArchetypeInfo,
+  type BuiltInArchetype,
+  type CustomArchetype,
+  type HasArchetype,
 } from "./progression";
 
 export type Stats = Record<Stat, number>;
@@ -62,7 +68,9 @@ export interface Character {
   hp: number;
   maxHp: number;
   archetype: Archetype;
-  // MP for mages, stamina for warriors and rogues (see archetypeInfo().pool).
+  // The whole kit of a "Something else" archetype; only when archetype is "custom".
+  custom?: CustomArchetype;
+  // MP for magic users, stamina for everyone else (see archetypeOf().pool).
   energy: number;
   maxEnergy: number;
   conditions: string[];
@@ -136,11 +144,11 @@ export const OPENING_NPCS: Npc[] = [
 
 // The same prison for everyone, with one line that shows each archetype what it
 // could do here (docs/UPDATES.md: "same prison, different opening move").
-export function openingNarration(archetype: Archetype): string {
+export function openingNarration(info: ArchetypeInfo): string {
   return (
     "Cold stone presses against your cheek. You wake in a cell that smells of wet straw and old " +
     "candle smoke, a thin blade of torchlight slipping under the iron door. Somewhere down the " +
-    `corridor, a guard is humming badly. ${archetypeInfo(archetype).openingHook}\n\n` +
+    `corridor, a guard is humming badly. ${info.openingHook}\n\n` +
     OPENING_QUESTION
   );
 }
@@ -151,8 +159,10 @@ const OPENING_QUESTION =
   "last night, and nobody could agree on what you’d done. So. Who are you, and how did you end " +
   "up down here?”";
 
-export function newGame(archetype: Archetype): GameState {
-  const info = archetypeInfo(archetype);
+// A new game for one of the three archetypes, or a generated one ("Something else").
+export function newGame(choice: BuiltInArchetype | CustomArchetype): GameState {
+  const who: HasArchetype = typeof choice === "string" ? { archetype: choice } : { archetype: "custom", custom: choice };
+  const info = archetypeOf(who);
   return {
     version: 4,
     character: {
@@ -162,7 +172,7 @@ export function newGame(archetype: Archetype): GameState {
       xp: 0,
       hp: STARTING_HP,
       maxHp: STARTING_HP,
-      archetype,
+      ...who,
       energy: maxEnergyAt(1),
       maxEnergy: maxEnergyAt(1),
       conditions: [],
@@ -171,13 +181,13 @@ export function newGame(archetype: Archetype): GameState {
       abilities: [info.signature],
       traits: [],
     },
-    stats: statsFor(archetype, {}),
+    stats: statsFor(who, {}),
     inventory: [],
     npcs: OPENING_NPCS.map((n) => ({ ...n })),
     flags: {},
     scene: { ...OPENING_SCENE },
     story: { summary: "", turn: 0 },
-    turns: [{ player: null, narration: openingNarration(archetype), rolls: [], changes: [] }],
+    turns: [{ player: null, narration: openingNarration(info), rolls: [], changes: [] }],
   };
 }
 
@@ -219,10 +229,19 @@ export function parseGameState(raw: unknown): GameState | null {
   if (!isInt(c.xp, 0, 1_000_000) || !isInt(c.level, 1, levelForXp(c.xp))) return null;
   const level = c.level;
   if (c.maxHp !== maxHpAt(level) || !isInt(c.hp, 0, c.maxHp)) return null;
-  if (!(ARCHETYPE_IDS as readonly unknown[]).includes(c.archetype)) return null;
-  const archetype = c.archetype as Archetype;
+  let who: HasArchetype;
+  if (c.archetype === "custom") {
+    // A generated archetype is held to the same budget every time it loads.
+    const custom = parseCustomArchetype(c.custom);
+    if (!custom.ok) return null;
+    who = { archetype: "custom", custom: custom.value };
+  } else if ((ARCHETYPE_IDS as readonly unknown[]).includes(c.archetype)) {
+    who = { archetype: c.archetype as BuiltInArchetype };
+  } else {
+    return null;
+  }
   if (c.maxEnergy !== maxEnergyAt(level) || !isInt(c.energy, 0, c.maxEnergy)) return null;
-  const build = parseBuild(c, level, archetype);
+  const build = parseBuild(c, level, who);
   if (!build) return null;
   // Stats are derived from the archetype's starting spread plus level-up raises;
   // whatever the client sent for them is ignored.
@@ -261,13 +280,13 @@ export function parseGameState(raw: unknown): GameState | null {
       xp: c.xp,
       hp: c.hp,
       maxHp: c.maxHp,
-      archetype,
+      ...who,
       energy: c.energy,
       maxEnergy: c.maxEnergy,
       conditions: c.conditions,
       ...build,
     },
-    stats: statsFor(archetype, build.statRaises),
+    stats: statsFor(who, build.statRaises),
     inventory: inventory as Item[],
     npcs: npcs as Npc[],
     flags: flags as Record<string, string>,
@@ -277,8 +296,8 @@ export function parseGameState(raw: unknown): GameState | null {
   };
 }
 
-export function statsFor(archetype: Archetype, raises: Partial<Record<Stat, number>>): Stats {
-  const base = archetypeInfo(archetype).stats;
+export function statsFor(who: HasArchetype, raises: Partial<Record<Stat, number>>): Stats {
+  const base = archetypeOf(who).stats;
   return Object.fromEntries(STATS.map((s) => [s, base[s] + (raises[s] ?? 0)])) as Stats;
 }
 
@@ -286,10 +305,10 @@ type Build = Pick<Character, "statRaises" | "skills" | "abilities" | "traits">;
 
 // Checks the skill ranks, abilities, stat raises and traits are a legal build for
 // the archetype and level.
-function parseBuild(c: Record<string, unknown>, level: number, archetype: Archetype): Build | null {
+function parseBuild(c: Record<string, unknown>, level: number, who: HasArchetype): Build | null {
   const { statRaises, skills, abilities, traits } = c;
   if (!isRecord(statRaises) || !isRecord(skills) || !Array.isArray(abilities) || !Array.isArray(traits)) return null;
-  const base = archetypeInfo(archetype).stats;
+  const base = archetypeOf(who).stats;
 
   let raises = 0;
   for (const [stat, n] of Object.entries(statRaises)) {
@@ -308,8 +327,8 @@ function parseBuild(c: Record<string, unknown>, level: number, archetype: Archet
 
   if (abilities.length > abilitiesAt(level) || new Set(abilities).size !== abilities.length) return null;
   const fits = (id: unknown) => {
-    const a = typeof id === "string" ? abilityInfo(id) : undefined;
-    return !!a && a.level <= level && a.archetypes.includes(archetype);
+    const a = typeof id === "string" ? abilityFor(who, id) : undefined;
+    return !!a && a.level <= level;
   };
   if (!abilities.every(fits)) return null;
 
@@ -471,6 +490,7 @@ export interface GameSummary {
   id: string;
   name: string | null;
   archetype: Archetype;
+  archetypeName?: string; // missing from summaries saved before generated archetypes
   level: number;
   scene: string;
   turns: number;
@@ -482,6 +502,7 @@ export function summarizeGame(id: string, state: GameState, updatedAt: number): 
     id,
     name: state.character.name,
     archetype: state.character.archetype,
+    archetypeName: archetypeOf(state.character).name,
     level: state.character.level,
     scene: state.scene.name,
     turns: state.turns.length,

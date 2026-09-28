@@ -17,7 +17,7 @@ import {
   STARTING_SKILL_POINTS,
   TRAITS,
   XP_FOR_LEVEL,
-  type Archetype,
+  type BuiltInArchetype,
   type LevelUpChoice,
 } from "./progression";
 
@@ -65,7 +65,7 @@ describe("archetypes", () => {
 
   it("gives every archetype a full ladder of abilities to grow into", () => {
     for (const archetype of ARCHETYPE_IDS) {
-      const list = abilitiesFor(archetype);
+      const list = abilitiesFor({ archetype });
       expect(list.length).toBeGreaterThanOrEqual(MAX_LEVEL);
       // Something new to learn at every level from 2 to 5.
       for (let level = 2; level <= 5; level++) expect(list.some((a) => a.level === level)).toBe(true);
@@ -141,7 +141,7 @@ describe("applyLevelUp", () => {
     expect(applyLevelUp(newGame("mage"), { skills: {}, ability: null, stat: null, trait: null }).ok).toBe(false);
   });
 
-  it.each(ARCHETYPE_IDS)("'choose for me' always produces a valid %s, all the way to the top level", (archetype: Archetype) => {
+  it.each(ARCHETYPE_IDS)("'choose for me' always produces a valid %s, all the way to the top level", (archetype: BuiltInArchetype) => {
     let state = withXp(1_000_000, newGame(archetype));
     while (pendingLevelUps(state) > 0) state = levelUp(state, autoLevelUpChoice(state)!);
     expect(state.character.level).toBe(MAX_LEVEL);

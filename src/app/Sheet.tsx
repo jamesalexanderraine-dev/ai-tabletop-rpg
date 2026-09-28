@@ -4,14 +4,16 @@ import { useEffect, useState, type ReactNode } from "react";
 import { capitalize, type GameState } from "@/engine/game";
 import {
   abilitiesFor,
-  archetypeInfo,
+  archetypeOf,
   MAX_SKILL_RANK,
+  poolOf,
   SKILLS,
   STAT_INFO,
   xpForNextLevel,
   type AbilityInfo,
-  type Archetype,
 } from "@/engine/progression";
+
+type Pool = "MP" | "stamina";
 
 export function formatMod(m: number): string {
   return m >= 0 ? `+${m}` : `−${Math.abs(m)}`;
@@ -75,7 +77,7 @@ export function CharacterSheet({
   const [tab, setTab] = useState<Tab>("Character");
   const tabs: Array<[Tab, string]> = [
     ["Character", "Character"],
-    ["Abilities", game.character.archetype === "mage" ? "Spells" : "Abilities"],
+    ["Abilities", poolOf(game.character) === "MP" ? "Spells" : "Abilities"],
     ["Pack", "Pack"],
     ["People", "People"],
   ];
@@ -107,11 +109,11 @@ function CharacterTab({ game }: { game: GameState }) {
   return (
     <>
       <p className="sheet-line">
-        {archetypeInfo(c.archetype).name} · Level {c.level} · XP {c.xp}
+        {archetypeOf(c).name} · Level {c.level} · XP {c.xp}
         {next !== null && <span className="muted"> / {next}</span>}
       </p>
       <p className="sheet-line">
-        HP {c.hp}/{c.maxHp} · {archetypeInfo(c.archetype).pool === "MP" ? "MP" : "Stamina"} {c.energy}/{c.maxEnergy}
+        HP {c.hp}/{c.maxHp} · {poolOf(c) === "MP" ? "MP" : "Stamina"} {c.energy}/{c.maxEnergy}
         {c.conditions.length > 0 && <> · {c.conditions.join(", ")}</>}
       </p>
       <p className="sheet-line muted">{game.scene.name}</p>
@@ -189,9 +191,10 @@ export function Pips({ rank }: { rank: number }) {
 function AbilitiesTab({ game }: { game: GameState }) {
   const [query, setQuery] = useState("");
   const c = game.character;
-  const mage = c.archetype === "mage";
+  const pool = poolOf(c);
+  const mage = pool === "MP";
   const q = query.trim().toLowerCase();
-  const matches = abilitiesFor(c.archetype).filter((a) => !q || `${a.name} ${a.description}`.toLowerCase().includes(q));
+  const matches = abilitiesFor(c).filter((a) => !q || `${a.name} ${a.description}`.toLowerCase().includes(q));
   const known = matches.filter((a) => c.abilities.includes(a.id));
   const learnable = matches.filter((a) => !c.abilities.includes(a.id));
   return (
@@ -208,7 +211,7 @@ function AbilitiesTab({ game }: { game: GameState }) {
       {known.length ? (
         <ul className="rows">
           {known.map((a) => (
-            <AbilityRow key={a.id} ability={a} archetype={c.archetype} />
+            <AbilityRow key={a.id} ability={a} pool={pool} />
           ))}
         </ul>
       ) : (
@@ -217,7 +220,7 @@ function AbilitiesTab({ game }: { game: GameState }) {
       <h3>Not yet learned</h3>
       <ul className="rows">
         {learnable.map((a) => (
-          <AbilityRow key={a.id} ability={a} archetype={c.archetype} locked={a.level > c.level} />
+          <AbilityRow key={a.id} ability={a} pool={pool} locked={a.level > c.level} />
         ))}
       </ul>
       <p className="muted small">
@@ -229,12 +232,12 @@ function AbilitiesTab({ game }: { game: GameState }) {
   );
 }
 
-export function AbilityText({ ability, archetype }: { ability: AbilityInfo; archetype: Archetype }) {
+export function AbilityText({ ability, pool }: { ability: AbilityInfo; pool: Pool }) {
   return (
     <span>
       <strong>{ability.name}</strong>{" "}
       <span className="muted small">
-        {ability.cost} {archetypeInfo(archetype).pool === "MP" ? "MP" : "stamina"}
+        {ability.cost} {pool}
       </span>
       <br />
       <span className="small">{ability.description}</span>
@@ -242,10 +245,10 @@ export function AbilityText({ ability, archetype }: { ability: AbilityInfo; arch
   );
 }
 
-function AbilityRow({ ability, archetype, locked }: { ability: AbilityInfo; archetype: Archetype; locked?: boolean }) {
+function AbilityRow({ ability, pool, locked }: { ability: AbilityInfo; pool: Pool; locked?: boolean }) {
   return (
     <li className={locked ? "locked" : undefined}>
-      <AbilityText ability={ability} archetype={archetype} />
+      <AbilityText ability={ability} pool={pool} />
       {locked && <span className="muted small">Lv {ability.level}</span>}
     </li>
   );

@@ -12,6 +12,8 @@ export interface GameStore {
   list(): Promise<GameSummary[]>;
   get(id: string): Promise<GameState | null>;
   put(id: string, state: GameState): Promise<GameSummary>;
+  // True if there was a game to delete.
+  remove(id: string): Promise<boolean>;
 }
 
 export const GAME_ID = /^[a-z0-9]{12}$/;
@@ -73,6 +75,14 @@ export function redisStore(url: string, token: string, fetchImpl: typeof fetch =
       ]);
       return summary;
     },
+    async remove(id) {
+      if (!GAME_ID.test(id)) return false;
+      const [deleted] = await send([
+        ["DEL", `game:${id}`, `game-meta:${id}`],
+        ["ZREM", "games", id],
+      ]);
+      return typeof deleted === "number" && deleted > 0;
+    },
   };
 }
 
@@ -92,6 +102,9 @@ export function memoryStore(): GameStore {
       const summary = summarizeGame(id, state, updatedAt);
       games.set(id, { state: JSON.parse(JSON.stringify(state)) as GameState, summary });
       return summary;
+    },
+    async remove(id) {
+      return games.delete(id);
     },
   };
 }

@@ -4,7 +4,7 @@
 // in this browser, as before.
 
 import { parseGameState, type GameState, type GameSummary } from "@/engine/game";
-import type { Archetype, LevelUpChoice } from "@/engine/progression";
+import type { BuiltInArchetype, CustomArchetype, LevelUpChoice } from "@/engine/progression";
 
 export type SaveStorage = "server" | "browser";
 
@@ -96,10 +96,11 @@ export async function openGame(id: string): Promise<GameState> {
   return state;
 }
 
-export async function createGame(archetype: Archetype): Promise<{ id: string; state: GameState }> {
+// A new game for Warrior, Rogue or Mage, or for an archetype made with "Something else".
+export async function createGame(choice: BuiltInArchetype | CustomArchetype): Promise<{ id: string; state: GameState }> {
   const created = await call<{ id: string; state: GameState }>("/api/games", {
     method: "POST",
-    body: JSON.stringify({ archetype }),
+    body: JSON.stringify(typeof choice === "string" ? { archetype: choice } : { custom: choice }),
   });
   write(CURRENT_KEY, created.id);
   return created;
@@ -111,6 +112,20 @@ export async function levelUpOnServer(id: string, choice: LevelUpChoice): Promis
     body: JSON.stringify({ choice }),
   });
   return state;
+}
+
+export async function deleteGame(id: string): Promise<void> {
+  await call(`/api/games/${id}`, { method: "DELETE" });
+  if (read(CURRENT_KEY) === id) write(CURRENT_KEY, null);
+}
+
+// "Something else": the DM designs an archetype from the player's own words.
+export async function designArchetype(concept: string): Promise<CustomArchetype> {
+  const { archetype } = await call<{ archetype: CustomArchetype }>("/api/archetypes", {
+    method: "POST",
+    body: JSON.stringify({ concept }),
+  });
+  return archetype;
 }
 
 export async function listGames(): Promise<GameSummary[]> {
