@@ -4,18 +4,22 @@
 
 import { STATS, type CheckResult, type Difficulty, type Stat } from "./dice";
 import {
+  abilitiesAt,
+  abilityInfo,
+  ARCHETYPE_IDS,
+  archetypeInfo,
   levelForXp,
   levelTraitsAt,
   MAX_SKILL_RANK,
   MAX_STAT,
   MAX_TRAITS,
+  maxEnergyAt,
   maxHpAt,
-  maxMpAt,
   skillInfo,
   skillPointsAt,
-  spellInfo,
-  spellsAt,
+  STARTING_SKILL_POINTS,
   statRaisesAt,
+  type Archetype,
 } from "./progression";
 
 export type Stats = Record<Stat, number>;
@@ -57,12 +61,14 @@ export interface Character {
   xp: number;
   hp: number;
   maxHp: number;
-  mp: number;
-  maxMp: number;
+  archetype: Archetype;
+  // MP for mages, stamina for warriors and rogues (see archetypeInfo().pool).
+  energy: number;
+  maxEnergy: number;
   conditions: string[];
   statRaises: Partial<Record<Stat, number>>;
   skills: Record<string, number>; // skill id -> rank
-  spells: string[]; // spell ids
+  abilities: string[]; // ability ids: spells for mages
   traits: Trait[];
 }
 
@@ -86,7 +92,7 @@ export interface Scene {
 }
 
 export interface GameState {
-  version: 3;
+  version: 4;
   character: Character;
   stats: Stats;
   inventory: Item[];
@@ -117,16 +123,6 @@ export const MAX_STORY_SUMMARY = 1500;
 export const STORY_SUMMARY_EVERY = 10;
 export const STARTING_HP = maxHpAt(1);
 
-// A modest starting spread. Character creation proper arrives with progression.
-export const STARTING_STATS: Stats = {
-  might: 1,
-  agility: 1,
-  wits: 2,
-  presence: 1,
-  spirit: 0,
-  luck: 0,
-};
-
 export const OPENING_SCENE: Scene = {
   name: "The cells beneath Harrowgate Keep",
   description:
@@ -138,18 +134,27 @@ export const OPENING_NPCS: Npc[] = [
   { name: "Old Tamsin", attitude: "unfriendly", note: "Bored dungeon guard who hums badly. Keeps the cell keys on his belt." },
 ];
 
-export const OPENING_NARRATION =
-  "Cold stone presses against your cheek. You wake in a cell that smells of wet straw and old " +
-  "candle smoke, a thin blade of torchlight slipping under the iron door. Somewhere down the " +
-  "corridor, a guard is humming badly.\n\n" +
+// The same prison for everyone, with one line that shows each archetype what it
+// could do here (docs/UPDATES.md: "same prison, different opening move").
+export function openingNarration(archetype: Archetype): string {
+  return (
+    "Cold stone presses against your cheek. You wake in a cell that smells of wet straw and old " +
+    "candle smoke, a thin blade of torchlight slipping under the iron door. Somewhere down the " +
+    `corridor, a guard is humming badly. ${archetypeInfo(archetype).openingHook}\n\n` +
+    OPENING_QUESTION
+  );
+}
+
+const OPENING_QUESTION =
   "In the cell across the passage, a dark elf with a split lip leans against the bars and studies " +
   "you with open curiosity. “Ah. The new one’s awake,” she says. “They dragged you in " +
   "last night, and nobody could agree on what you’d done. So. Who are you, and how did you end " +
   "up down here?”";
 
-export function newGame(): GameState {
+export function newGame(archetype: Archetype): GameState {
+  const info = archetypeInfo(archetype);
   return {
-    version: 3,
+    version: 4,
     character: {
       name: null,
       backstory: [],
@@ -157,21 +162,22 @@ export function newGame(): GameState {
       xp: 0,
       hp: STARTING_HP,
       maxHp: STARTING_HP,
-      mp: 0,
-      maxMp: 0,
+      archetype,
+      energy: maxEnergyAt(1),
+      maxEnergy: maxEnergyAt(1),
       conditions: [],
       statRaises: {},
-      skills: {},
-      spells: [],
+      skills: { ...info.skills },
+      abilities: [info.signature],
       traits: [],
     },
-    stats: { ...STARTING_STATS },
+    stats: statsFor(archetype, {}),
     inventory: [],
     npcs: OPENING_NPCS.map((n) => ({ ...n })),
     flags: {},
     scene: { ...OPENING_SCENE },
     story: { summary: "", turn: 0 },
-    turns: [{ player: null, narration: OPENING_NARRATION, rolls: [], changes: [] }],
+    turns: [{ player: null, narration: openingNarration(archetype), rolls: [], changes: [] }],
   };
 }
 
@@ -201,7 +207,8 @@ export function parseGameState(raw: unknown): GameState | null {
   if (!isRecord(raw)) return null;
   if (raw.version === 1) return parseGameState(upgradeFromV1(raw));
   if (raw.version === 2) return parseGameState(upgradeFromV2(raw));
-  if (raw.version !== 3) return null;
+  if (raw.version === 3) return parseGameState(upgradeFromV3(raw));
+  if (raw.version !== 4) return null;
   const { character: c, stats, inventory, npcs, flags, scene, story, turns } = raw;
   if (!isRecord(c) || !isRecord(stats) || !isRecord(flags) || !isRecord(scene) || !isRecord(story)) return null;
   if (!Array.isArray(inventory) || !Array.isArray(npcs) || !Array.isArray(turns)) return null;
@@ -212,11 +219,13 @@ export function parseGameState(raw: unknown): GameState | null {
   if (!isInt(c.xp, 0, 1_000_000) || !isInt(c.level, 1, levelForXp(c.xp))) return null;
   const level = c.level;
   if (c.maxHp !== maxHpAt(level) || !isInt(c.hp, 0, c.maxHp)) return null;
-  if (c.maxMp !== maxMpAt(level) || !isInt(c.mp, 0, c.maxMp)) return null;
-  const build = parseBuild(c, level);
+  if (!(ARCHETYPE_IDS as readonly unknown[]).includes(c.archetype)) return null;
+  const archetype = c.archetype as Archetype;
+  if (c.maxEnergy !== maxEnergyAt(level) || !isInt(c.energy, 0, c.maxEnergy)) return null;
+  const build = parseBuild(c, level, archetype);
   if (!build) return null;
-  // Stats are derived from the starting spread plus level-up raises; whatever
-  // the client sent for them is ignored.
+  // Stats are derived from the archetype's starting spread plus level-up raises;
+  // whatever the client sent for them is ignored.
   if (!STATS.every((s) => typeof stats[s] === "number")) return null;
 
   if (inventory.length > MAX_ITEMS || !inventory.every(isItem)) return null;
@@ -244,7 +253,7 @@ export function parseGameState(raw: unknown): GameState | null {
   }
 
   return {
-    version: 3,
+    version: 4,
     character: {
       name: c.name as string | null,
       backstory: c.backstory,
@@ -252,12 +261,13 @@ export function parseGameState(raw: unknown): GameState | null {
       xp: c.xp,
       hp: c.hp,
       maxHp: c.maxHp,
-      mp: c.mp,
-      maxMp: c.maxMp,
+      archetype,
+      energy: c.energy,
+      maxEnergy: c.maxEnergy,
       conditions: c.conditions,
       ...build,
     },
-    stats: statsFor(build.statRaises),
+    stats: statsFor(archetype, build.statRaises),
     inventory: inventory as Item[],
     npcs: npcs as Npc[],
     flags: flags as Record<string, string>,
@@ -267,21 +277,24 @@ export function parseGameState(raw: unknown): GameState | null {
   };
 }
 
-export function statsFor(raises: Partial<Record<Stat, number>>): Stats {
-  return Object.fromEntries(STATS.map((s) => [s, STARTING_STATS[s] + (raises[s] ?? 0)])) as Stats;
+export function statsFor(archetype: Archetype, raises: Partial<Record<Stat, number>>): Stats {
+  const base = archetypeInfo(archetype).stats;
+  return Object.fromEntries(STATS.map((s) => [s, base[s] + (raises[s] ?? 0)])) as Stats;
 }
 
-type Build = Pick<Character, "statRaises" | "skills" | "spells" | "traits">;
+type Build = Pick<Character, "statRaises" | "skills" | "abilities" | "traits">;
 
-// Checks the skill ranks, spells, stat raises and traits are a legal build for the level.
-function parseBuild(c: Record<string, unknown>, level: number): Build | null {
-  const { statRaises, skills, spells, traits } = c;
-  if (!isRecord(statRaises) || !isRecord(skills) || !Array.isArray(spells) || !Array.isArray(traits)) return null;
+// Checks the skill ranks, abilities, stat raises and traits are a legal build for
+// the archetype and level.
+function parseBuild(c: Record<string, unknown>, level: number, archetype: Archetype): Build | null {
+  const { statRaises, skills, abilities, traits } = c;
+  if (!isRecord(statRaises) || !isRecord(skills) || !Array.isArray(abilities) || !Array.isArray(traits)) return null;
+  const base = archetypeInfo(archetype).stats;
 
   let raises = 0;
   for (const [stat, n] of Object.entries(statRaises)) {
     if (!(STATS as readonly string[]).includes(stat) || !isInt(n, 0, MAX_STAT)) return null;
-    if (STARTING_STATS[stat as Stat] + n > MAX_STAT) return null;
+    if (base[stat as Stat] + n > MAX_STAT) return null;
     raises += n;
   }
   if (raises > statRaisesAt(level)) return null;
@@ -291,10 +304,14 @@ function parseBuild(c: Record<string, unknown>, level: number): Build | null {
     if (!skillInfo(id) || !isInt(rank, 0, MAX_SKILL_RANK)) return null;
     points += rank;
   }
-  if (points > skillPointsAt(level)) return null;
+  if (points > STARTING_SKILL_POINTS + skillPointsAt(level)) return null;
 
-  if (spells.length > spellsAt(level) || new Set(spells).size !== spells.length) return null;
-  if (!spells.every((id) => typeof id === "string" && (spellInfo(id)?.level ?? Infinity) <= level)) return null;
+  if (abilities.length > abilitiesAt(level) || new Set(abilities).size !== abilities.length) return null;
+  const fits = (id: unknown) => {
+    const a = typeof id === "string" ? abilityInfo(id) : undefined;
+    return !!a && a.level <= level && a.archetypes.includes(archetype);
+  };
+  if (!abilities.every(fits)) return null;
 
   if (traits.length > MAX_TRAITS || !traits.every(isTrait)) return null;
   if (traits.filter((t) => t.source === "level").length > levelTraitsAt(level)) return null;
@@ -302,7 +319,7 @@ function parseBuild(c: Record<string, unknown>, level: number): Build | null {
   return {
     statRaises: statRaises as Partial<Record<Stat, number>>,
     skills: skills as Record<string, number>,
-    spells: spells as string[],
+    abilities: abilities as string[],
     traits: traits as Trait[],
   };
 }
@@ -317,11 +334,42 @@ function isTrait(v: unknown): v is Trait {
   );
 }
 
+// Milestone 3 saves (before archetypes) become mages: they already had spells.
+// The mage's signature spell is added, MP becomes the full pool, and anything the
+// new starting spread would push past the limits is trimmed rather than lost.
+function upgradeFromV3(v3: Record<string, unknown>): Record<string, unknown> {
+  const c = isRecord(v3.character) ? v3.character : {};
+  const mage = archetypeInfo("mage");
+  const level = typeof c.level === "number" ? c.level : 1;
+  const spells = Array.isArray(c.spells) ? c.spells.filter((id): id is string => typeof id === "string") : [];
+  const abilities = [...new Set([mage.signature, ...spells])].slice(0, abilitiesAt(level));
+  const skills: Record<string, number> = isRecord(c.skills) ? { ...(c.skills as Record<string, number>) } : {};
+  for (const [id, rank] of Object.entries(mage.skills)) skills[id] = Math.min(MAX_SKILL_RANK, (skills[id] ?? 0) + rank);
+  const raises: Partial<Record<Stat, number>> = isRecord(c.statRaises) ? { ...(c.statRaises as Record<Stat, number>) } : {};
+  for (const stat of STATS) {
+    if (raises[stat]) raises[stat] = Math.max(0, Math.min(raises[stat]!, MAX_STAT - mage.stats[stat]));
+  }
+  const { mp: _mp, maxMp: _maxMp, spells: _spells, ...rest } = c;
+  return {
+    ...v3,
+    version: 4,
+    character: {
+      ...rest,
+      archetype: "mage",
+      energy: maxEnergyAt(level),
+      maxEnergy: maxEnergyAt(level),
+      abilities,
+      skills,
+      statRaises: raises,
+    },
+  };
+}
+
 // Milestone 2 saves: start the progression fields at level 1. XP already earned
 // counts, so a long game may have a level-up waiting.
 function upgradeFromV2(v2: Record<string, unknown>): Record<string, unknown> {
   const c = isRecord(v2.character) ? v2.character : {};
-  const fresh = newGame().character;
+  const fresh = newGame("mage").character;
   return {
     ...v2,
     version: 3,
@@ -337,6 +385,10 @@ function upgradeFromV2(v2: Record<string, unknown>): Record<string, unknown> {
       skills: {},
       spells: [],
       traits: [],
+      archetype: undefined,
+      energy: undefined,
+      maxEnergy: undefined,
+      abilities: undefined,
     },
   };
 }
@@ -345,7 +397,7 @@ function upgradeFromV1(v1: Record<string, unknown>): Record<string, unknown> {
   const character = isRecord(v1.character) ? v1.character : {};
   const worldFacts = Array.isArray(v1.worldFacts) ? v1.worldFacts : [];
   const turns = Array.isArray(v1.turns) ? v1.turns : [];
-  const fresh = newGame();
+  const fresh = newGame("mage");
   return {
     ...fresh,
     version: 2,

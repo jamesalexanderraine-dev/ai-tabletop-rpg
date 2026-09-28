@@ -2,6 +2,26 @@
 
 Short playtest notes, newest first. One entry per task: date, what changed, what felt good or bad, what to try next.
 
+## 2026-09-27: Archetypes and grounded abilities
+
+- New games open on a "Who are you?" screen: Warrior, Rogue or Mage. Each has a 5-point stat spread, two starting skill ranks and a level 1 signature ability that fits the cell: Feat of Strength (bend the bars), Makeshift Disguise (pass as a guard) or Spark (the torch). The opening narration carries a one-line hook per archetype.
+- One ability catalog replaces spells. Mages keep their 12 spells (MP). Warriors and rogues get grounded, never-supernatural abilities that cost stamina, written for creative, story-moving uses outside combat as much as in it. Warrior only: lift and break things beyond normal strength, battle cry, shield another, unbreakable. Rogue only: disguise, charm (Honeyed Words), vanish, forgery, rumours, rooftops, perfect timing. Both: intimidate (Hard Stare), detect lies (Read a Liar), tracking, camp cooking, field medicine, jury-rigging, taming animals.
+- `use_ability` replaces `cast_spell`. The DM must call it whenever the player's action is covered by an ability, named or not, so freeform wording costs the same (docs/UPDATES.md: implicit and explicit use resolve to identical mechanics).
+- MP and stamina are one pool per character, 4 at level 1 and +2 per level; each level-up offers the archetype's own abilities.
+- Older saves become mages: their spells stay valid and Spark is added.
+- No once-per-day cooldowns, by decision: warrior and rogue abilities work exactly like spells (a stamina cost, usable whenever the pool allows), just never supernatural in the world.
+- Not yet: "Something else" (a generated archetype).
+- Watch on the next playtest: does the DM call use_ability when the player just describes the feat? Are 4 points of stamina at level 1 too tight or too loose? Do the abilities get used outside fights?
+
+## 2026-09-27: Playtest fixes, part 1 (failure, difficulty, one-liners)
+
+- Source: James's playtest doc, snapshotted as `docs/UPDATES.md`.
+- Failed rolls are now real failures in the DM prompt. The intended outcome doesn't happen, never a success with a cost, and the situation gets worse. The story generally keeps moving by leaving room for the player to find an alternate route. Essential goals reroute to a harder path, non-essential ones are just a no, and a derail is allowed when the stakes call for it. The old line "failure moves the story forward, never a dead end" invited the soft failures seen in play, and is gone.
+- Every difficulty tier now has example tasks, trivial actions get no roll, and the DM is told to spread difficulties rather than default to medium (the "everything needs a 12" finding).
+- `roll_check` is only for the player's actions. Enemy and NPC outcomes are resolved out of sight, like a DM behind a screen.
+- Every stat and skill has a one-liner saying what it covers and how it shows up, shown on the sheet and at level-up and given to the DM, so the player and the DM read skills the same way. Added Animal Handling (Spirit), which the dragon-raising playthrough had no skill for.
+- Watch on the next playtest: do difficulties spread across 8 to 20? Do failures bite without killing the arc? Does the DM still slip into success-with-a-cost on plot-important rolls?
+
 ## 2026-09-27: Rolling dice while the DM writes
 
 - Turns now stream to the browser as events: each roll the moment the engine makes it, the narration as the DM writes it, then the finished turn. The check still comes from the DM's own `roll_check` call, so one model makes every ruling.
