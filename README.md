@@ -41,7 +41,7 @@ From then on, every pull request gets its own preview URL in a PR comment, and m
 
 Without a database, games are saved in the browser, so each preview link (a different site as far as the browser is concerned) starts empty. To keep games on the server, where every link and device can see them:
 
-1. In Vercel, open the project, then **Storage → Create Database** (or **Browse Marketplace**) and pick **Upstash → Redis**. The free plan is plenty.
+1. In Vercel, open the project's **Storage** tab, tap **Create Database** and pick **Upstash** (Redis). Choose the **Free** plan and a region near you.
 2. Connect it to the project for **all environments** (Production, Preview, Development). This adds `KV_REST_API_URL` and `KV_REST_API_TOKEN`.
 3. Redeploy (or push a commit). `/api/health` shows `"serverSaves": true` once it's live.
 
