@@ -60,7 +60,7 @@ describe("validateConcept", () => {
 });
 
 describe("createClaudeArchetypeDesigner", () => {
-  it("forces the archetype tool, anchors on the defaults, and returns the tool input", async () => {
+  it("asks for the archetype tool without forcing it, and returns the tool input", async () => {
     let params: Parameters<SendMessage>[0] | undefined;
     const send: SendMessage = async (p) => {
       params = p;
@@ -77,10 +77,32 @@ describe("createClaudeArchetypeDesigner", () => {
     };
     const draft = await createClaudeArchetypeDesigner({ send, model: "claude-opus-5" }).design("a royal chef", ["too strong"]);
     expect(draft).toEqual(MODEL_DRAFT);
-    expect(params!.tool_choice).toEqual({ type: "tool", name: "create_archetype" });
+    // Forced tool use is rejected by the 5.5 models.
+    expect(params!.tool_choice).toBeUndefined();
     const request = JSON.stringify(params!.messages);
     expect(request).toContain("a royal chef");
     expect(request).toContain("too strong");
+  });
+
+  it("asks once more when the model replies without calling the tool", async () => {
+    const replies = [
+      { content: [{ type: "text", text: "What a fun idea!" }], stop_reason: "end_turn" },
+      { content: [{ type: "tool_use", id: "t1", name: "create_archetype", input: MODEL_DRAFT }], stop_reason: "tool_use" },
+    ];
+    let calls = 0;
+    const send: SendMessage = async () =>
+      ({
+        id: "msg",
+        type: "message",
+        role: "assistant",
+        model: "test",
+        ...replies[calls++],
+        stop_sequence: null,
+        usage: { input_tokens: 1, output_tokens: 1 },
+      }) as unknown as Awaited<ReturnType<SendMessage>>;
+    const draft = await createClaudeArchetypeDesigner({ send, model: "claude-sonnet-5-5" }).design("a royal chef");
+    expect(draft).toEqual(MODEL_DRAFT);
+    expect(calls).toBe(2);
   });
 
   it("shows the model all three hand-made kits and every skill id", () => {

@@ -79,6 +79,8 @@ describe("createClaudeDm", () => {
 
   it("asks for server-side fallbacks only on models that support them", async () => {
     for (const [model, expected] of [
+      ["claude-opus-5-5", true],
+      ["claude-sonnet-5-5", true],
       ["claude-opus-5", true],
       ["claude-sonnet-5", false],
     ] as const) {

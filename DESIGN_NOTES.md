@@ -2,6 +2,14 @@
 
 Short playtest notes, newest first. One entry per task: date, what changed, what felt good or bad, what to try next.
 
+## 2026-09-28: Pick the DM: Opus 5.5 or Sonnet 5.5
+
+- The Sheet has a "Dungeon Master" picker: Claude Opus 5.5 (the new default, was Opus 5) or Claude Sonnet 5.5 (released today, half the price per token and faster). The pick is remembered in this browser and applies from the next turn. The server only runs models on the list; anything else gets the default.
+- Opus 5.5 is $4 / $20 per million tokens and Sonnet 5.5 is $2 / $10; both read the cached system prompt at $0.20. The per-turn cost log now knows both, with each model's own cache-read price.
+- Fix found on the way: designing a "Something else" archetype forced a tool call, which both 5.5 models reject with an error. It now asks for the tool in the prompt and retries once if the model answers in text.
+- Archetype design stays on the default model (Opus 5.5), whatever the picker says.
+- Not played yet (no API key in this environment). To try: play the same scene on each model and compare how quickly text starts, whether rulings feel fair, whether NPCs remember things, and how rich the prose is. Watch for refusals on Sonnet 5.5: its new "general_harms" category isn't retried on another model.
+
 ## 2026-09-28: Speakers, roles, and your lines in a bubble
 
 - The DM now writes each spoken line as its own paragraph, `<say who="Sereth">Prepare to die.</say>`. Action and staging stay in the prose around it (docs/UPDATES.md, "Chat bubbles for dialogue").

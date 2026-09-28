@@ -25,8 +25,10 @@ import {
   leaveGame,
   levelUpOnServer,
   listGames,
+  loadDmModel,
   loadSaves,
   openGame,
+  saveDmModel,
   saveInBrowser,
   type SaveStorage,
 } from "./saves";
@@ -36,6 +38,7 @@ import { LevelUp } from "./LevelUp";
 import { Narration } from "./Narration";
 import { CharacterSheet, Meter } from "./Sheet";
 import { readTurnEvents } from "./turnStream";
+import { DEFAULT_DM_MODEL, type DmModelId } from "@/shared/dmModels";
 
 
 function distanceFromEnd(): number {
@@ -66,6 +69,9 @@ export default function Game() {
   const [error, setError] = useState<string | null>(null);
   const [open, setOpen] = useState<"sheet" | "levelup" | "characters" | null>(null);
   const [switchError, setSwitchError] = useState<string | null>(null);
+  // Read after mount: the server render can't see this browser's storage.
+  const [dmModel, setDmModel] = useState<DmModelId>(DEFAULT_DM_MODEL);
+  useEffect(() => setDmModel(loadDmModel()), []);
   // Whether the page should keep following the newest content, like a chat reply.
   // Scrolling up to reread turns it off; scrolling back to the end turns it on.
   const following = useRef(true);
@@ -165,7 +171,7 @@ export default function Game() {
       const response = await fetch("/api/turn", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...(gameId ? { gameId } : { state: game }), input, ...chipped }),
+        body: JSON.stringify({ ...(gameId ? { gameId } : { state: game }), input, ...chipped, model: dmModel }),
       });
       if (!response.ok) {
         const data = (await response.json().catch(() => ({}))) as { error?: string };
@@ -356,6 +362,11 @@ export default function Game() {
           onNewGame={storage === "server" ? () => setOpen("characters") : startOver}
           newGameLabel={storage === "server" ? "Switch character" : "Start a new game"}
           busy={pendingInput !== null}
+          dmModel={dmModel}
+          onDmModel={(m) => {
+            setDmModel(m);
+            saveDmModel(m);
+          }}
         />
       )}
       {open === "levelup" && <LevelUp game={game} onApply={applyLevelUp} onClose={() => setOpen(null)} />}

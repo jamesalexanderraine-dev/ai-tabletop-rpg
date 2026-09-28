@@ -2,6 +2,7 @@
 
 import { useEffect, useState, type ReactNode } from "react";
 import { capitalize, type GameState } from "@/engine/game";
+import { DM_MODELS, type DmModelId } from "@/shared/dmModels";
 import {
   abilitiesFor,
   archetypeOf,
@@ -67,12 +68,16 @@ export function CharacterSheet({
   onNewGame,
   newGameLabel = "Start a new game",
   busy,
+  dmModel,
+  onDmModel,
 }: {
   game: GameState;
   onClose: () => void;
   onNewGame: () => void;
   newGameLabel?: string;
   busy: boolean;
+  dmModel: DmModelId;
+  onDmModel: (model: DmModelId) => void;
 }) {
   const [tab, setTab] = useState<Tab>("Character");
   const tabs: Array<[Tab, string]> = [
@@ -94,10 +99,35 @@ export function CharacterSheet({
       {tab === "Abilities" && <AbilitiesTab game={game} />}
       {tab === "Pack" && <PackTab game={game} />}
       {tab === "People" && <PeopleTab game={game} />}
+      <DmPicker value={dmModel} onChange={onDmModel} />
       <button type="button" className="link danger" onClick={onNewGame} disabled={busy}>
         {newGameLabel}
       </button>
     </SheetFrame>
+  );
+}
+
+// Which Claude model runs the DM from the next turn on.
+function DmPicker({ value, onChange }: { value: DmModelId; onChange: (model: DmModelId) => void }) {
+  return (
+    <section className="dm-picker">
+      <h3>Dungeon Master</h3>
+      <div role="radiogroup" aria-label="Dungeon Master model">
+        {DM_MODELS.map((m) => (
+          <button
+            key={m.id}
+            type="button"
+            role="radio"
+            aria-checked={value === m.id}
+            className={value === m.id ? "dm-option on" : "dm-option"}
+            onClick={() => onChange(m.id)}
+          >
+            <strong>{m.name}</strong>
+            <span className="small">{m.blurb}</span>
+          </button>
+        ))}
+      </div>
+    </section>
   );
 }
 

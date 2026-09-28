@@ -126,34 +126,37 @@ export function createClaudeArchetypeDesigner(options: { send?: SendMessage; mod
         (problems?.length
           ? `\n\nYour last design broke these rules. Fix them and call ${TOOL_NAME} again:\n- ${problems.join("\n- ")}`
           : "");
-      const response: Message = await send(
-        {
+      // The 5.5 models don't accept a forced tool call, so the prompt asks for the
+      // tool and a reply without it gets one more try.
+      for (let attempt = 0; attempt < 2; attempt++) {
+        const response: Message = await send(
+          {
+            model,
+            max_tokens: 4000,
+            system: ARCHETYPE_PROMPT,
+            tools: [ARCHETYPE_TOOL as Anthropic.Beta.Messages.BetaTool],
+            messages: [{ role: "user", content: request }],
+            output_config: { effort: "low" },
+            ...(supportsServerFallback(model) ? { betas: ["server-side-fallback-2026-07-01"], fallbacks: "default" as const } : {}),
+          },
+          () => undefined,
+        );
+        logUsage(
           model,
-          max_tokens: 4000,
-          system: ARCHETYPE_PROMPT,
-          tools: [ARCHETYPE_TOOL as Anthropic.Beta.Messages.BetaTool],
-          tool_choice: { type: "tool", name: TOOL_NAME },
-          messages: [{ role: "user", content: request }],
-          output_config: { effort: "low" },
-          ...(supportsServerFallback(model) ? { betas: ["server-side-fallback-2026-07-01"], fallbacks: "default" as const } : {}),
-        },
-        () => undefined,
-      );
-      logUsage(
-        model,
-        {
-          calls: 1,
-          input: response.usage?.input_tokens ?? 0,
-          output: response.usage?.output_tokens ?? 0,
-          cacheRead: response.usage?.cache_read_input_tokens ?? 0,
-          cacheWrite: response.usage?.cache_creation_input_tokens ?? 0,
-        },
-        "Archetype usage",
-      );
-      if (response.stop_reason === "refusal") throw new DmRefusalError("The model declined to design this archetype.");
-      const call = response.content.find((b) => b.type === "tool_use" && b.name === TOOL_NAME);
-      if (!call || call.type !== "tool_use") throw new Error("The model didn't design an archetype.");
-      return call.input;
+          {
+            calls: 1,
+            input: response.usage?.input_tokens ?? 0,
+            output: response.usage?.output_tokens ?? 0,
+            cacheRead: response.usage?.cache_read_input_tokens ?? 0,
+            cacheWrite: response.usage?.cache_creation_input_tokens ?? 0,
+          },
+          "Archetype usage",
+        );
+        if (response.stop_reason === "refusal") throw new DmRefusalError("The model declined to design this archetype.");
+        const call = response.content.find((b) => b.type === "tool_use" && b.name === TOOL_NAME);
+        if (call?.type === "tool_use") return call.input;
+      }
+      throw new Error("The model didn't design an archetype.");
     },
   };
 }

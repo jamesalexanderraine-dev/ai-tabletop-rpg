@@ -11,7 +11,7 @@ if (!process.env.ANTHROPIC_API_KEY?.trim()) {
   process.exit(1);
 }
 
-const model = process.env.DM_MODEL?.trim() || "claude-opus-5";
+const model = process.env.DM_MODEL?.trim() || "claude-opus-5-5";
 const client = new Anthropic();
 
 try {

@@ -3,7 +3,7 @@ import { NextResponse } from "next/server";
 import { prepareAction } from "@/engine/actions";
 import { parseGameState, validatePlayerInput, type GameState } from "@/engine/game";
 import { createClaudeDm, DmRefusalError } from "@/dm/claude";
-import { dmModel, hasAnthropicKey } from "@/dm/config";
+import { hasAnthropicKey, resolveDmModel } from "@/dm/config";
 import { turnEventStream } from "@/dm/stream";
 import { playTurn } from "@/dm/turn";
 import { GAME_ID, gameStore } from "@/server/saves";
@@ -33,13 +33,16 @@ export async function POST(request: Request) {
   } catch {
     return error(400, "Couldn't read that request.");
   }
-  const { gameId, state: rawState, input, ability, items } = (body ?? {}) as {
+  const { gameId, state: rawState, input, ability, items, model: requestedModel } = (body ?? {}) as {
     gameId?: unknown;
     state?: unknown;
     input?: unknown;
     ability?: unknown;
     items?: unknown;
+    model?: unknown;
   };
+  // The DM the player picked on the sheet, if it's one we offer.
+  const model = resolveDmModel(requestedModel);
   const playerInput = validatePlayerInput(input);
   if (!playerInput.ok) return error(400, playerInput.error);
 
@@ -71,10 +74,10 @@ export async function POST(request: Request) {
 
   // Validation errors above are plain JSON; from here on the turn streams.
   const stream = turnEventStream(async (events) => {
-    const result = await playTurn(current, playerInput.value, createClaudeDm(), Math.random, events, action.value);
+    const result = await playTurn(current, playerInput.value, createClaudeDm({ model }), Math.random, events, action.value);
     if (typeof gameId === "string" && store) await store.put(gameId, result.state);
     return result;
-  }, describeError);
+  }, (err) => describeError(err, model));
   return new Response(stream, {
     headers: {
       "Content-Type": "application/x-ndjson; charset=utf-8",
@@ -84,7 +87,7 @@ export async function POST(request: Request) {
   });
 }
 
-function describeError(err: unknown): string {
+function describeError(err: unknown, model: string): string {
   if (err instanceof DmRefusalError) return "The DM wouldn't run that one. Try putting it another way.";
   if (err instanceof Anthropic.RateLimitError) {
     return "The DM is catching their breath (rate limited). Try again in a moment.";
@@ -96,7 +99,7 @@ function describeError(err: unknown): string {
     console.error("DM API error", err.status, reason);
     if (err instanceof Anthropic.AuthenticationError) return `Anthropic didn't accept the API key (401: ${reason}).`;
     if (err instanceof Anthropic.PermissionDeniedError) {
-      return `The API key isn't allowed to use ${dmModel()} (403: ${reason}).`;
+      return `The API key isn't allowed to use ${model} (403: ${reason}).`;
     }
     return `The DM stumbled (${err.status ?? "network"} error: ${reason}). Try again.`;
   }
