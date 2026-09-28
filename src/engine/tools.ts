@@ -26,7 +26,7 @@ import {
   type GameState,
   type Roll,
 } from "./game";
-import { abilityInfo, abilityNoun, archetypeInfo, MAX_SKILL_RANK, MAX_TRAITS, SKILLS } from "./progression";
+import { abilitiesFor, abilityFor, abilityNoun, MAX_SKILL_RANK, MAX_TRAITS, poolOf, SKILLS } from "./progression";
 
 export const DM_TOOL_NAMES = [
   "roll_check",
@@ -104,8 +104,8 @@ function oneOf<T extends string>(input: Record<string, unknown>, key: string, op
 
 const sameName = (a: string, b: string) => a.toLowerCase() === b.toLowerCase();
 
-// "MP" for mages, "stamina" for warriors and rogues.
-export const poolLabel = (archetype: GameState["character"]["archetype"]) => archetypeInfo(archetype).pool;
+// "MP" for magic users, "stamina" for everyone else.
+export const poolLabel = poolOf;
 
 export function applyDmTool(state: GameState, name: string, rawInput: unknown, ctx: ToolContext): ToolApplied {
   if (!(DM_TOOL_NAMES as readonly string[]).includes(name)) return fail(`There is no tool called "${name}".`);
@@ -174,7 +174,7 @@ const HANDLERS: Record<DmToolName, Handler> = {
 
     const hp = Math.min(c.maxHp, Math.max(0, c.hp + hpChange));
     const energy = Math.min(c.maxEnergy, Math.max(0, c.energy + energyChange));
-    const pool = poolLabel(c.archetype);
+    const pool = poolLabel(c);
     const notes: string[] = [];
     if (hp !== c.hp) notes.push(`HP ${c.hp} → ${hp}`);
     if (energy !== c.energy) notes.push(`${pool} ${c.energy} → ${energy}`);
@@ -300,10 +300,13 @@ const HANDLERS: Record<DmToolName, Handler> = {
   use_ability(state, input) {
     const id = text(input, "ability", MAX_NAME_LENGTH);
     const c = state.character;
-    const pool = poolLabel(c.archetype);
-    const noun = abilityNoun(c.archetype);
-    const ability = abilityInfo(id) ?? abilityInfo(id.toLowerCase().replace(/[^a-z]+/g, "_").replace(/^_+|_+$/g, ""));
-    const known = c.abilities.map((a) => abilityInfo(a)?.name ?? a);
+    const pool = poolLabel(c);
+    const noun = abilityNoun(c);
+    const ability =
+      abilityFor(c, id) ??
+      abilitiesFor(c).find((a) => sameName(a.name, id)) ??
+      abilityFor(c, id.toLowerCase().replace(/[^a-z]+/g, "_").replace(/^_+|_+$/g, ""));
+    const known = c.abilities.map((a) => abilityFor(c, a)?.name ?? a);
     if (!ability || !c.abilities.includes(ability.id)) {
       return fail(
         `The player doesn't have the ${noun} "${id}". Their ${noun === "spell" ? "spells" : "abilities"}: ${known.join(", ") || "none"}. ` +
@@ -313,11 +316,11 @@ const HANDLERS: Record<DmToolName, Handler> = {
     if (c.energy < ability.cost) {
       return fail(
         `${ability.name} costs ${ability.cost} ${pool} and the player has ${c.energy}. ` +
-          (c.archetype === "mage" ? "The magic sputters out." : "They're too spent to pull it off; narrate them falling short."),
+          (pool === "MP" ? "The magic sputters out." : "They're too spent to pull it off; narrate them falling short."),
       );
     }
     const energy = c.energy - ability.cost;
-    const verb = c.archetype === "mage" ? "Cast" : "Used";
+    const verb = pool === "MP" ? "Cast" : "Used";
     return {
       ok: true,
       state: { ...state, character: { ...c, energy } },

@@ -20,6 +20,10 @@ function fakeUpstash() {
         case "ZADD":
           sorted.set(String(args[2]), Number(args[1]));
           return { result: 1 };
+        case "DEL":
+          return { result: args.filter((k) => strings.delete(String(k))).length };
+        case "ZREM":
+          return { result: sorted.delete(String(args[1])) ? 1 : 0 };
         case "ZRANGE":
           return {
             result: [...sorted.entries()]
@@ -57,6 +61,17 @@ function storeContract(name: string, make: () => GameStore) {
       await new Promise((r) => setTimeout(r, 5));
       await store.put(a, newGame("rogue"));
       expect((await store.list()).map((g) => g.id)).toEqual([a, b]);
+    });
+
+    it("deletes a game from the list and storage", async () => {
+      const store = make();
+      const [keep, drop] = [newGameId(), newGameId()];
+      await store.put(keep, newGame("rogue"));
+      await store.put(drop, newGame("mage"));
+      expect(await store.remove(drop)).toBe(true);
+      expect(await store.remove(drop)).toBe(false);
+      expect(await store.get(drop)).toBeNull();
+      expect((await store.list()).map((g) => g.id)).toEqual([keep]);
     });
 
     it("returns null for games that don't exist", async () => {

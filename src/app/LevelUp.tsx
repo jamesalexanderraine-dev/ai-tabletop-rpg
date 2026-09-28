@@ -9,7 +9,7 @@ import {
   availableTraits,
   HP_PER_LEVEL,
   abilityNoun,
-  archetypeInfo,
+  poolOf,
   ENERGY_PER_LEVEL,
   learnableAbilities,
   levelUpNeeds,
@@ -77,7 +77,7 @@ export function LevelUp({
   return (
     <SheetFrame title={`Level ${needs.level}`} onClose={onClose}>
       <p className="sheet-line">
-        +{HP_PER_LEVEL} max HP, +{ENERGY_PER_LEVEL} max {archetypeInfo(c.archetype).pool === "MP" ? "MP" : "stamina"}
+        +{HP_PER_LEVEL} max HP, +{ENERGY_PER_LEVEL} max {poolOf(c)}
         {pendingLevelUps(game) > 1 && <span className="muted"> · {pendingLevelUps(game) - 1} more level-up after this</span>}
       </p>
       <button type="button" className="auto" onClick={() => setChoice(autoLevelUpChoice(game) ?? emptyChoice())}>
@@ -122,11 +122,11 @@ export function LevelUp({
 
       {needs.ability && (
         <>
-          <h3>Learn {abilityNoun(c.archetype) === "spell" ? "a spell" : "an ability"}</h3>
+          <h3>Learn {abilityNoun(c) === "spell" ? "a spell" : "an ability"}</h3>
           <ul className="rows choices" role="radiogroup">
             {learnableAbilities(game, needs.level).map((a) => (
               <Choice key={a.id} selected={choice.ability === a.id} onSelect={() => setChoice({ ...choice, ability: a.id })}>
-                <AbilityText ability={a} archetype={c.archetype} />
+                <AbilityText ability={a} pool={poolOf(c)} />
               </Choice>
             ))}
           </ul>

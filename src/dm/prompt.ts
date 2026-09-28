@@ -9,8 +9,8 @@ import {
   SKILLS,
   STAT_INFO,
   skillInfo,
-  abilityInfo,
-  archetypeInfo,
+  abilityFor,
+  archetypeOf,
   xpForNextLevel,
 } from "@/engine/progression";
 
@@ -68,7 +68,7 @@ The world is stored in code, not in your memory. You only see a short window of 
 - World facts that should persist (a promise, a door left open, a favour owed): set_flag.
 - Going somewhere new: move_scene, with a short description of the new place.
 - The player's name and who they are: remember (about "name" or "backstory"). Treat their own words about themselves as canon, even when they're silly.
-- Abilities: the character's archetype (warrior, rogue or mage) gives them abilities, listed in the state with their costs. Mages cast spells, which spend MP. Warriors' and rogues' abilities spend stamina and are never supernatural: narrate them as grit, training, nerve and cunning, even when they let the character do what an ordinary person couldn't (lift a horse, break an iron-bound door, pass for a guard, read a liar at a glance).
+- Abilities: the character's archetype (warrior, rogue, mage, or one generated from the player's own idea) gives them abilities, listed in the state with their costs. Mages (and generated archetypes marked as magic) cast spells, which spend MP. Everyone else's abilities spend stamina and are never supernatural: narrate them as grit, training, nerve and cunning, even when they let the character do what an ordinary person couldn't (lift a horse, break an iron-bound door, pass for a guard, read a liar at a glance).
 - Whenever the player does something one of their abilities covers, call use_ability, whether or not they name it: "I heave the boulder aside" is Feat of Strength just as much as "I use Feat of Strength". The cost is the same either way, so freeform wording never dodges it. Then narrate the ability doing what it describes; roll only if the outcome is still uncertain beyond that.
 - If they attempt something like an ability they don't have, it's an ordinary attempt at ordinary difficulty (lifting a horse without Feat of Strength is heroic at best).
 - Play abilities for more than fights: they are meant to open creative, story-moving uses (a disguise to get into a ball, a camp meal that loosens a smuggler's tongue, a jury-rigged pulley to raise the portcullis). Reward inventive uses.
@@ -86,7 +86,7 @@ Progression: stats and skills set how the world treats the character even withou
 
 Tone: the world plays it earnest, with light comedy simmering underneath. Mirror the player's level of absurdity: straight if they're straight, gonzo if they push it. Silly choices stick and the world reacts to them with a straight face. Only refuse things that break the fiction (like teleporting to the moon at level 1), and say why in character.
 
-The opening scene: the player, a newly chosen warrior, rogue or mage (see the state), has woken in a cell in the dungeons beneath Harrowgate Keep, with no memory of how they were caught and nothing in their pockets. In the cell opposite is Sereth, a sharp-tongued dark elf thief who wants out as badly as they do and will trade help for help. A bored guard, Old Tamsin, patrols with the keys on his belt. Sereth draws the player's identity out of them through conversation: whatever they answer becomes who they are, within the archetype they picked. The scene's natural goal is escape, by any means the player can dream up, and the cell offers each archetype an obvious first move: a warrior can wrench the old bars, a rogue can work the cheap lock, a mage can call on the torch's flame.`;
+The opening scene: the player, a newly chosen warrior, rogue or mage, or an archetype of their own invention (see the state), has woken in a cell in the dungeons beneath Harrowgate Keep, with no memory of how they were caught and nothing in their pockets. In the cell opposite is Sereth, a sharp-tongued dark elf thief who wants out as badly as they do and will trade help for help. A bored guard, Old Tamsin, patrols with the keys on his belt. Sereth draws the player's identity out of them through conversation: whatever they answer becomes who they are, within the archetype they picked. The scene's natural goal is escape, by any means the player can dream up, and the cell offers each archetype an obvious first move: a warrior can wrench the old bars, a rogue can work the cheap lock, a mage can call on the torch's flame, and a generated archetype has its own opening move in the first narration.`;
 
 const nameProp = { type: "string", description: "Name, as it should appear to the player." };
 
@@ -219,10 +219,22 @@ function list(items: string[], empty: string): string {
   return items.length ? items.join("; ") : empty;
 }
 
+// Built-in archetypes are one word; a generated one also needs its concept, what
+// its abilities are (magic or not) and its signature weapon.
+function describeArchetype(c: GameState["character"]): string {
+  const info = archetypeOf(c);
+  if (c.archetype !== "custom" || !c.custom) return `a ${info.name.toLowerCase()}`;
+  return (
+    `a ${info.name} (their own archetype, from the player's idea "${c.custom.concept}": ${info.tagline} ` +
+    `Their abilities are ${info.pool === "MP" ? "magic, and spend MP" : "never supernatural, and spend stamina"}. ` +
+    `Signature weapon: ${info.signatureWeapon}, taken from them when they were caught and not in their inventory until they get it back)`
+  );
+}
+
 export function buildStateSummary(state: GameState): string {
   const { character: c, stats, inventory, npcs, flags, scene, story } = state;
   const lines = [
-    `Character: ${c.name ?? "name not yet known"}, a ${archetypeInfo(c.archetype).name.toLowerCase()}. Level ${c.level}. HP ${c.hp}/${c.maxHp}. ${poolLabel(c.archetype)} ${c.energy}/${c.maxEnergy}. XP ${c.xp}${
+    `Character: ${c.name ?? "name not yet known"}, ${describeArchetype(c)}. Level ${c.level}. HP ${c.hp}/${c.maxHp}. ${poolLabel(c)} ${c.energy}/${c.maxEnergy}. XP ${c.xp}${
       xpForNextLevel(c.level) === null ? "" : ` (next level at ${xpForNextLevel(c.level)})`
     }. Conditions: ${c.conditions.join(", ") || "none"}.`,
     `Stat modifiers: ${Object.entries(stats)
@@ -236,8 +248,8 @@ export function buildStateSummary(state: GameState): string {
     )}`,
     `Abilities: ${list(
       c.abilities
-        .map((id) => abilityInfo(id))
-        .flatMap((a) => (a ? [`${a.name} (${a.cost} ${poolLabel(c.archetype)}): ${a.description}`] : [])),
+        .map((id) => abilityFor(c, id))
+        .flatMap((a) => (a ? [`${a.name} (${a.cost} ${poolLabel(c)}): ${a.description}`] : [])),
       "none",
     )}`,
     `Traits: ${list(c.traits.map((t) => `${t.name}: ${t.upside} But: ${t.downside}`), "none")}`,

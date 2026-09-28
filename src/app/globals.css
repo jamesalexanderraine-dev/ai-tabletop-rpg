@@ -757,3 +757,92 @@ textarea {
     animation: none !important;
   }
 }
+
+/* "Something else": the player's own archetype, described then previewed. */
+.archetype.custom {
+  cursor: default;
+}
+
+.archetype.custom.made {
+  border-color: var(--accent);
+}
+
+.archetype .concept {
+  width: 100%;
+  padding: 0.55rem 0.7rem;
+  border: 1px solid var(--rule);
+  border-radius: 0.6rem;
+  background: var(--bg);
+  color: var(--ink);
+  font-size: 1rem;
+  resize: vertical;
+}
+
+.archetype .confirm {
+  margin-top: 0.4rem;
+}
+
+.archetype .error {
+  margin: 0;
+}
+
+.archetype details summary {
+  cursor: pointer;
+  color: var(--accent);
+}
+
+.kit-actions {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-top: 0.3rem;
+}
+
+/* Saved characters: the one being played is marked; the others can be deleted. */
+.saved-games li {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.25rem;
+}
+
+.saved-games li.current .saved-game {
+  border-style: dashed;
+}
+
+.saved-name {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.6rem;
+}
+
+.playing {
+  font-size: 0.8rem;
+  color: var(--muted);
+}
+
+.delete-save {
+  margin-top: 0;
+  font-size: 0.85rem;
+}
+
+.who-button {
+  background: none;
+  border: 0;
+  padding: 0;
+  text-align: left;
+  cursor: pointer;
+}
+
+.who-button::after {
+  content: " \25BE";
+  color: var(--muted);
+  font-size: 0.8em;
+}
+
+.new-character {
+  display: block;
+  width: 100%;
+  margin-top: 1rem;
+}

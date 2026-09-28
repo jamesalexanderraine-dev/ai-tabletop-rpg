@@ -2,6 +2,16 @@
 
 Short playtest notes, newest first. One entry per task: date, what changed, what felt good or bad, what to try next.
 
+## 2026-09-28: Switching characters, and "Something else"
+
+- Tap your name in the header (or "Switch character" in the sheet) to see every saved character, jump straight into another, start a new one, or delete old ones. Needs server saves; with browser saves there's still one game at a time.
+- "Something else" is a fourth start card: describe who you are ("a royal chef who poisoned the wrong duke") and Claude designs the archetype: name, stats, two skills, a signature weapon, an opening hook, a signature ability and ten more to grow into. You see the whole kit before playing, and can try again or reword it.
+- Balance is enforced in code (`src/engine/customArchetype.ts`), not trusted to the model: 5 stat points with none above +2, two rank-1 skills, abilities unlocking on the defaults' schedule (levels 2, 2, 2, 2, 3, 3, 3, 4, 4, 5) with costs pulled into each level's range. A design that breaks the rules goes back to the model once with the problems. The same check runs every time a save loads.
+- Only concepts that are magical by nature get spells and MP; everything else is stamina and never supernatural, like warriors and rogues. The signature weapon starts confiscated, as a hook to get it back.
+- Cost: one call at low effort, roughly 5 cents per design (a retry doubles it).
+- Tested with a fake Claude and fake database: design, preview, play, the retry after a greedy design, switching, deleting, and a level-up offering the chef's own abilities.
+- Watch on the next playtest: does the kit feel like the concept "all the way down"? Are the generated abilities as useful as the hand-made ones? Is half a minute of waiting OK, or does it need a livelier loading moment?
+
 ## 2026-09-28: Server saves
 
 - Games can now live on the server (Upstash Redis on Vercel), so they follow you across preview links and devices. Previews are separate sites to the browser, which is why Sir John seemed to vanish on a new link.

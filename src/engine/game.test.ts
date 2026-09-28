@@ -9,7 +9,7 @@ describe("newGame", () => {
   it.each(ARCHETYPE_IDS)("starts a %s in the cell with its own spread, skills and signature ability", (archetype) => {
     const info = archetypeInfo(archetype);
     const game = newGame(archetype);
-    expect(game.turns).toEqual([{ player: null, narration: openingNarration(archetype), rolls: [], changes: [] }]);
+    expect(game.turns).toEqual([{ player: null, narration: openingNarration(info), rolls: [], changes: [] }]);
     expect(game.turns[0]!.narration).toContain(info.openingHook);
     expect(game.character).toMatchObject({
       name: null,

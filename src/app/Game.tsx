@@ -10,9 +10,17 @@ import {
   type Roll,
   type Turn,
 } from "@/engine/game";
-import { archetypeInfo, pendingLevelUps, type Archetype, type LevelUpChoice } from "@/engine/progression";
+import {
+  pendingLevelUps,
+  poolOf,
+  type BuiltInArchetype,
+  type CustomArchetype,
+  type LevelUpChoice,
+} from "@/engine/progression";
+import { CharacterSwitcher } from "./Characters";
 import {
   createGame,
+  deleteGame,
   leaveGame,
   levelUpOnServer,
   listGames,
@@ -53,7 +61,8 @@ export default function Game() {
   const [live, setLive] = useState<LiveTurn | null>(null);
   const pendingInput = live?.input ?? null;
   const [error, setError] = useState<string | null>(null);
-  const [open, setOpen] = useState<"sheet" | "levelup" | null>(null);
+  const [open, setOpen] = useState<"sheet" | "levelup" | "characters" | null>(null);
+  const [switchError, setSwitchError] = useState<string | null>(null);
   // Whether the page should keep following the newest content, like a chat reply.
   // Scrolling up to reread turns it off; scrolling back to the end turns it on.
   const following = useRef(true);
@@ -77,8 +86,8 @@ export default function Game() {
   useEffect(() => {
     if (game && storage === "browser") saveInBrowser(game);
   }, [game, storage]);
-  // On load, show the latest turn from its first line.
-  const loaded = game != null;
+  // On load (or switching character), show the latest turn from its first line.
+  const loaded = game == null ? null : (gameId ?? "browser");
   useEffect(() => {
     if (loaded) document.querySelector(".story > .turn:last-of-type")?.scrollIntoView({ block: "start" });
   }, [loaded]);
@@ -185,12 +194,10 @@ export default function Game() {
     }
   }
 
+  // Back to the start screen. On the server the game stays saved; in the browser
+  // it's replaced, so ask first.
   function startOver() {
-    const message =
-      storage === "server"
-        ? "Leave this game? It stays saved, and you can continue it from the start screen."
-        : "Start a new game? This one will be lost.";
-    if (!confirm(message)) return;
+    if (storage === "browser" && !confirm("Start a new game? This one will be lost.")) return;
     leaveGame(storage);
     setGame(null);
     setGameId(null);
@@ -200,15 +207,15 @@ export default function Game() {
     if (storage === "server") listGames().then(setSaved).catch(() => undefined);
   }
 
-  async function start(archetype: Archetype) {
+  async function start(choice: BuiltInArchetype | CustomArchetype) {
     setStartError(null);
     if (storage === "browser") {
-      setGame(newGame(archetype));
+      setGame(newGame(choice));
       return;
     }
     setStarting(true);
     try {
-      const created = await createGame(archetype);
+      const created = await createGame(choice);
       setGameId(created.id);
       setGame(created.state);
     } catch (err) {
@@ -232,6 +239,39 @@ export default function Game() {
     }
   }
 
+  // Swap to another saved character mid-game.
+  async function switchTo(id: string) {
+    setSwitchError(null);
+    setStarting(true);
+    try {
+      const state = await openGame(id);
+      setGameId(id);
+      setGame(state);
+      setError(null);
+      setDraft("");
+      setOpen(null);
+    } catch (err) {
+      setSwitchError(err instanceof Error ? err.message : "Couldn't load that character. Try again.");
+    } finally {
+      setStarting(false);
+    }
+  }
+
+  // Delete a saved character for good, after asking. Returns whether it went.
+  async function remove(target: GameSummary): Promise<boolean> {
+    if (!confirm(`Delete ${target.name ?? "this stranger"} for good? This can't be undone.`)) return false;
+    const setErr = game ? setSwitchError : setStartError;
+    setErr(null);
+    try {
+      await deleteGame(target.id);
+      setSaved((games) => games.filter((g) => g.id !== target.id));
+      return true;
+    } catch (err) {
+      setErr(err instanceof Error ? err.message : "Couldn't delete that character. Try again.");
+      return false;
+    }
+  }
+
   async function applyLevelUp(next: GameState, choice: LevelUpChoice): Promise<GameState> {
     const saved = gameId ? await levelUpOnServer(gameId, choice) : next;
     setGame(saved);
@@ -240,7 +280,9 @@ export default function Game() {
 
   if (game === undefined) return <main className="game" />;
   if (game === null) {
-    return <StartScreen saved={saved} onContinue={resume} onPick={start} busy={starting} error={startError} />;
+    return (
+      <StartScreen saved={saved} onContinue={resume} onDelete={(g) => void remove(g)} onPick={start} busy={starting} error={startError} />
+    );
   }
   const c = game.character;
   const levelUpsWaiting = pendingLevelUps(game);
@@ -249,15 +291,27 @@ export default function Game() {
     <main className="game">
       <header className="bar">
         <div className="status">
-          <span className="who">
-            {c.name ?? "A stranger"} <span className="lv">Lv {c.level}</span>
-          </span>
+          {storage === "server" ? (
+            <button
+              type="button"
+              className="who who-button"
+              onClick={() => setOpen("characters")}
+              disabled={pendingInput !== null}
+              aria-label="Switch character"
+            >
+              {c.name ?? "A stranger"} <span className="lv">Lv {c.level}</span>
+            </button>
+          ) : (
+            <span className="who">
+              {c.name ?? "A stranger"} <span className="lv">Lv {c.level}</span>
+            </span>
+          )}
           <Meter label="Health" value={c.hp} max={c.maxHp} kind="hp" />
           <Meter
-            label={archetypeInfo(c.archetype).pool === "MP" ? "Magic" : "Stamina"}
+            label={poolOf(c) === "MP" ? "Magic" : "Stamina"}
             value={c.energy}
             max={c.maxEnergy}
-            kind={archetypeInfo(c.archetype).pool === "MP" ? "mp" : "stamina"}
+            kind={poolOf(c) === "MP" ? "mp" : "stamina"}
           />
           <span className="where">{game.scene.name}</span>
         </div>
@@ -309,12 +363,26 @@ export default function Game() {
         <CharacterSheet
           game={game}
           onClose={() => setOpen(null)}
-          onNewGame={startOver}
-          newGameLabel={storage === "server" ? "Back to the start screen" : "Start a new game"}
+          onNewGame={storage === "server" ? () => setOpen("characters") : startOver}
+          newGameLabel={storage === "server" ? "Switch character" : "Start a new game"}
           busy={pendingInput !== null}
         />
       )}
       {open === "levelup" && <LevelUp game={game} onApply={applyLevelUp} onClose={() => setOpen(null)} />}
+      {open === "characters" && (
+        <CharacterSwitcher
+          currentId={gameId}
+          onSwitch={(id) => void switchTo(id)}
+          onNew={startOver}
+          onDelete={remove}
+          onClose={() => {
+            setSwitchError(null);
+            setOpen(null);
+          }}
+          busy={starting || pendingInput !== null}
+          error={switchError}
+        />
+      )}
     </main>
   );
 }

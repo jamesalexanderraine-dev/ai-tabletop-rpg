@@ -92,7 +92,10 @@ export const STAT_INFO: StatInfo[] = [
 export const statInfo = (id: Stat) => STAT_INFO.find((s) => s.id === id)!;
 
 export const ARCHETYPE_IDS = ["warrior", "rogue", "mage"] as const;
-export type Archetype = (typeof ARCHETYPE_IDS)[number];
+export type BuiltInArchetype = (typeof ARCHETYPE_IDS)[number];
+// "custom" is a "Something else" archetype, generated from the player's own
+// concept; its whole kit is stored in the save (Character.custom).
+export type Archetype = BuiltInArchetype | "custom";
 
 export interface ArchetypeInfo {
   id: Archetype;
@@ -104,6 +107,8 @@ export interface ArchetypeInfo {
   signature: string; // the ability they start with
   // What the opening scene offers this archetype: who they are through action.
   openingHook: string;
+  // Generated archetypes only: the weapon that defines them, taken when they were caught.
+  signatureWeapon?: string;
 }
 
 export const ARCHETYPES: ArchetypeInfo[] = [
@@ -142,7 +147,44 @@ export const ARCHETYPES: ArchetypeInfo[] = [
   },
 ];
 
-export const archetypeInfo = (id: Archetype) => ARCHETYPES.find((a) => a.id === id)!;
+export const archetypeInfo = (id: BuiltInArchetype) => ARCHETYPES.find((a) => a.id === id)!;
+
+// A "Something else" archetype, generated from the player's concept and held to
+// the same budget as the three above (see customArchetype.ts). abilities[0] is
+// the signature; the rest are learned by leveling.
+export interface CustomArchetype {
+  concept: string; // what the player typed
+  name: string;
+  tagline: string;
+  pool: "MP" | "stamina"; // MP only for concepts that are magical by nature
+  stats: Record<Stat, number>;
+  skills: Record<string, number>;
+  signatureWeapon: string;
+  openingHook: string;
+  abilities: AbilityInfo[];
+}
+
+// Anything that has an archetype: a character, or the summary of a saved game.
+export interface HasArchetype {
+  archetype: Archetype;
+  custom?: CustomArchetype;
+}
+
+export function archetypeOf(c: HasArchetype): ArchetypeInfo {
+  if (c.archetype !== "custom") return archetypeInfo(c.archetype);
+  const k = c.custom!;
+  return {
+    id: "custom",
+    name: k.name,
+    tagline: k.tagline,
+    pool: k.pool,
+    stats: k.stats,
+    skills: k.skills,
+    signature: k.abilities[0]!.id,
+    openingHook: k.openingHook,
+    signatureWeapon: k.signatureWeapon,
+  };
+}
 
 // Starting skill ranks count toward the build on top of the points earned by leveling.
 export const STARTING_SKILL_POINTS = 2;
@@ -227,17 +269,24 @@ export function pendingLevelUps(state: GameState): number {
   return Math.max(0, levelForXp(state.character.xp) - state.character.level);
 }
 
-export function abilitiesFor(archetype: Archetype): AbilityInfo[] {
-  return ABILITIES.filter((a) => a.archetypes.includes(archetype));
+// Every ability this character's archetype can have.
+export function abilitiesFor(c: HasArchetype): AbilityInfo[] {
+  if (c.archetype === "custom") return c.custom?.abilities ?? [];
+  return ABILITIES.filter((a) => a.archetypes.includes(c.archetype));
 }
+
+export const abilityFor = (c: HasArchetype, id: string) => abilitiesFor(c).find((a) => a.id === id);
 
 export function learnableAbilities(state: GameState, level: number): AbilityInfo[] {
   const c = state.character;
-  return abilitiesFor(c.archetype).filter((a) => a.level <= level && !c.abilities.includes(a.id));
+  return abilitiesFor(c).filter((a) => a.level <= level && !c.abilities.includes(a.id));
 }
 
-// What an ability is called for this character: spells for mages, abilities otherwise.
-export const abilityNoun = (archetype: Archetype) => (archetype === "mage" ? "spell" : "ability");
+// "MP" for magic users, "stamina" for everyone else.
+export const poolOf = (c: HasArchetype) => archetypeOf(c).pool;
+
+// What an ability is called for this character: spells for magic users, abilities otherwise.
+export const abilityNoun = (c: HasArchetype) => (poolOf(c) === "MP" ? "spell" : "ability");
 
 export function availableTraits(state: GameState): TraitInfo[] {
   return TRAITS.filter((t) => !state.character.traits.some((owned) => owned.name === t.name));
@@ -293,9 +342,9 @@ export function applyLevelUp(state: GameState, choice: LevelUpChoice): LevelUpOu
   if (spent !== needs.skillPoints) return { ok: false, error: `Spend exactly ${needs.skillPoints} skill points.` };
 
   const abilities = [...c.abilities];
-  const noun = abilityNoun(c.archetype);
+  const noun = abilityNoun(c);
   if (needs.ability) {
-    const ability = choice.ability ? abilityInfo(choice.ability) : undefined;
+    const ability = choice.ability ? abilityFor(c, choice.ability) : undefined;
     if (!ability || !learnableAbilities(state, needs.level).includes(ability)) {
       return { ok: false, error: `Pick a ${noun} to learn.` };
     }
