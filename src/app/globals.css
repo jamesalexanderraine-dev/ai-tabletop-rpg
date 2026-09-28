@@ -993,29 +993,32 @@ textarea {
   margin-top: 1rem;
 }
 
-/* What the player typed: a pull quote, as before the bubbles. */
-.player {
-  margin: 0 0 0.6rem;
-  padding-left: 0.8rem;
-  border-left: 2px solid var(--accent);
-  font-style: italic;
-  color: var(--muted);
+/* What the player typed: a speech bubble on their side. */
+.mine {
+  display: flex;
+  justify-content: flex-end;
+  margin: 0 0 0.8rem;
+}
+
+.mine .bubble {
+  max-width: 85%;
+  margin: 0;
+  padding: 0.5rem 0.8rem;
+  border: 1px solid color-mix(in srgb, var(--accent) 30%, var(--rule));
+  border-radius: 1rem 1rem 0.3rem 1rem;
+  background: color-mix(in srgb, var(--accent) 9%, var(--bg));
   white-space: pre-wrap;
   overflow-wrap: anywhere;
 }
 
-.player .chip {
+.mine .chip {
   margin-right: 0.35rem;
   vertical-align: 0.05em;
 }
 
-/* Dialogue as chat bubbles: the speaker's face and name above the bubble,
-   coloured by which side they're on. Lines the DM gives the player's own
-   character sit on the right. */
+/* Characters speak in pull quotes: face, name and role above, and a rule in
+   their side's colour. */
 .say {
-  display: flex;
-  flex-direction: column;
-  gap: 0.25rem;
   margin: 0 0 0.9rem;
 }
 
@@ -1023,6 +1026,7 @@ textarea {
   display: flex;
   align-items: center;
   gap: 0.4rem;
+  margin-bottom: 0.2rem;
   font-size: 0.85rem;
   font-variant: small-caps;
   letter-spacing: 0.05em;
@@ -1030,7 +1034,6 @@ textarea {
 }
 
 .say.you .speaker {
-  flex-direction: row-reverse;
   color: var(--accent);
 }
 
@@ -1084,22 +1087,26 @@ textarea {
   color: var(--muted);
 }
 
-/* The bubble starts beside the face and runs to the far margin. */
-.bubble {
-  min-width: 0;
-  margin-left: 2.2rem;
-  padding: 0.5rem 0.8rem;
-  border: 1px solid var(--rule);
-  border-radius: 0.3rem 1rem 1rem 1rem;
-  background: var(--panel);
-  font-size: 1.05rem;
+/* The quote's rule runs down from the middle of the face; the words line up with the name. */
+.narration .quote {
+  margin: 0 0 0 0.85rem;
+  padding-left: 1.3rem;
+  border-left: 2px solid var(--muted);
+  font-style: italic;
   white-space: pre-wrap;
   overflow-wrap: anywhere;
 }
 
-.say.you .bubble {
-  margin: 0 2.2rem 0 0;
-  border-radius: 1rem 0.3rem 1rem 1rem;
-  background: color-mix(in srgb, var(--accent) 9%, var(--bg));
-  border-color: color-mix(in srgb, var(--accent) 30%, var(--rule));
+.say.you .quote {
+  border-left-color: var(--accent);
+}
+
+.say.friendly .quote,
+.say.allied .quote {
+  border-left-color: var(--win);
+}
+
+.say.unfriendly .quote,
+.say.hostile .quote {
+  border-left-color: var(--lose);
 }

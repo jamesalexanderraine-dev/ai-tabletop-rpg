@@ -39,6 +39,9 @@ describe("parseNarration", () => {
       { kind: "speech", who: "The guard", npc: "Old Tamsin", text: "Halt." },
     ]);
     expect(parseNarration('<say npc="Sereth">No name given.</say>')).toEqual([{ kind: "prose", text: "No name given." }]);
+    expect(parseNarration('<say who="A fishwife" role="Stranger">Mind the eels.</say>')).toEqual([
+      { kind: "speech", who: "A fishwife", role: "Stranger", text: "Mind the eels." },
+    ]);
   });
 
   it("drops stray closing tags and empty speech", () => {

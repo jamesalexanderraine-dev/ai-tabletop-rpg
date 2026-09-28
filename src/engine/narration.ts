@@ -1,7 +1,7 @@
 // Dialogue in the narration (docs/UPDATES.md, "Chat bubbles for dialogue"). The
 // DM keeps action and staging in prose and puts each spoken line in its own
 // paragraph as <say who="Sereth">Prepare to die.</say>; the story shows those as
-// chat bubbles with the speaker's name and face. Parsing is forgiving: it works
+// quotes with the speaker's face, name and role. Parsing is forgiving: it works
 // on half-written text while a turn streams in, and anything that isn't a
 // well-formed tag is shown as prose rather than lost.
 
@@ -9,7 +9,7 @@
 // the character in the state, for their face and role.
 export type NarrationPart =
   | { kind: "prose"; text: string }
-  | { kind: "speech"; who: string; npc?: string; text: string };
+  | { kind: "speech"; who: string; npc?: string; role?: string; text: string };
 
 const SAY = /<say\s+([^>]*)>([\s\S]*?)(?:<\/say>|$)/g;
 const ATTR = /(\w+)\s*=\s*["“]([^"”\n]{1,60})["”]/g;
@@ -34,9 +34,9 @@ export function parseNarration(text: string): NarrationPart[] {
     let last = 0;
     for (const m of paragraph.matchAll(SAY)) {
       prose(paragraph.slice(last, m.index));
-      const { who, npc } = attributes(m[1]!);
+      const { who, npc, role } = attributes(m[1]!);
       const words = unquote(m[2]!);
-      if (words && who) parts.push({ kind: "speech", who, ...(npc && { npc }), text: words });
+      if (words && who) parts.push({ kind: "speech", who, ...(npc && { npc }), ...(role && { role: role.slice(0, 24) }), text: words });
       else prose(words);
       last = m.index! + m[0].length;
     }

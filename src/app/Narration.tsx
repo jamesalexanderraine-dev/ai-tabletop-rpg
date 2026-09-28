@@ -28,25 +28,11 @@ function isPlayer(game: GameState, who: string): boolean {
   return name === "you" || name === game.character.name?.toLowerCase();
 }
 
-// A spoken line: face, name and who they are to you on a line above, and the
-// bubble starting beside the face and running to the far margin. Coloured by
-// attitude, so friend and foe read at a glance. The player's character speaks
-// from the right.
-export function Bubble({
-  who,
-  role,
-  tone,
-  you = false,
-  children,
-}: {
-  who: string;
-  role?: string;
-  tone: string;
-  you?: boolean;
-  children: ReactNode;
-}) {
+// A spoken line, as a pull quote: face, name and who they are to you on a line
+// above, coloured by attitude so friend and foe read at a glance.
+export function Speech({ who, role, tone, children }: { who: string; role?: string; tone: string; children: ReactNode }) {
   return (
-    <div className={you ? "say you" : `say ${tone}`}>
+    <div className={`say ${tone}`}>
       <div className="speaker">
         <span className="avatar" aria-hidden>
           {initial(who)}
@@ -54,12 +40,12 @@ export function Bubble({
         <span className="speaker-name">{who}</span>
         {role && <span className="speaker-role">{role}</span>}
       </div>
-      <div className="bubble">{children}</div>
+      <p className="quote">{children}</p>
     </div>
   );
 }
 
-// The DM's narration: prose paragraphs, with spoken lines lifted into bubbles.
+// The DM's narration: prose paragraphs, with spoken lines lifted out as quotes.
 export function Narration({ text, game, opening = false }: { text: string; game: GameState; opening?: boolean }) {
   return (
     <div className={opening ? "narration opening" : "narration"}>
@@ -67,16 +53,16 @@ export function Narration({ text, game, opening = false }: { text: string; game:
         if (part.kind === "prose") return <p key={i}>{part.text}</p>;
         if (isPlayer(game, part.who)) {
           return (
-            <Bubble key={i} who={game.character.name ?? "You"} tone="you" you>
+            <Speech key={i} who={game.character.name ?? "You"} tone="you">
               {part.text}
-            </Bubble>
+            </Speech>
           );
         }
         const npc = speakerOf(game, part.who, part.npc);
         return (
-          <Bubble key={i} who={part.who} role={npc?.role} tone={npc?.attitude ?? "neutral"}>
+          <Speech key={i} who={part.who} role={npc?.role ?? part.role} tone={npc?.attitude ?? "neutral"}>
             {part.text}
-          </Bubble>
+          </Speech>
         );
       })}
     </div>

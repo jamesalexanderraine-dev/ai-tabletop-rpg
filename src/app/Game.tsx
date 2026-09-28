@@ -377,24 +377,26 @@ export default function Game() {
   );
 }
 
-// What the player typed, as a pull quote, with any chips they attached. (Only
-// lines the DM gives their character go in a speech bubble.)
+// What the player typed, in a speech bubble on their side, with any chips they
+// attached. (Characters, the player's included, speak in pull quotes.)
 function PlayerLine({ text, ability, items, game }: { text: string; ability?: string; items?: string[]; game: GameState }) {
   const abilityName = ability ? (abilityFor(game.character, ability)?.name ?? ability) : null;
   return (
-    <p className="player">
-      {abilityName && (
-        <span className={poolOf(game.character) === "MP" ? "chip ability mp" : "chip ability"}>
-          <span aria-hidden>{"\u2726"}</span> {abilityName}
-        </span>
-      )}
-      {items?.map((name) => (
-        <span key={name} className="chip item">
-          <span aria-hidden>{"\u25c6"}</span> {name}
-        </span>
-      ))}
-      {text}
-    </p>
+    <div className="mine">
+      <p className="bubble">
+        {abilityName && (
+          <span className={poolOf(game.character) === "MP" ? "chip ability mp" : "chip ability"}>
+            <span aria-hidden>{"\u2726"}</span> {abilityName}
+          </span>
+        )}
+        {items?.map((name) => (
+          <span key={name} className="chip item">
+            <span aria-hidden>{"\u25c6"}</span> {name}
+          </span>
+        ))}
+        {text}
+      </p>
+    </div>
   );
 }
 

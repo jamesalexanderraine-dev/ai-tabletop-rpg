@@ -2,16 +2,16 @@
 
 Short playtest notes, newest first. One entry per task: date, what changed, what felt good or bad, what to try next.
 
-## 2026-09-28: Chat bubbles for dialogue
+## 2026-09-28: Speakers, roles, and your lines in a bubble
 
-- The DM now writes each spoken line as its own paragraph, `<say who="Sereth">Prepare to die.</say>`, and the story shows it as a chat bubble with the speaker's name and face. Action and staging stay in the prose around it (docs/UPDATES.md, "Chat bubbles for dialogue").
-- Faces are initials for now, until the preset image library. They're coloured by attitude, so friend and foe read at a glance: green friendly or allied, red unfriendly or hostile, grey neutral or unknown.
-- The speaker's face, name and role sit on a line above the bubble; the bubble holds only the words, starting beside the face and running to the far margin (James's calls after the first two versions).
-- Every character now has a role, who they are to you in a word or two ("Cellmate", "Jailer", "Innkeeper"), shown as a label beside their name and in the People tab. The DM sets it in spawn_npc and changes it with update_npc when the relationship shifts ("Jailer → Ally").
-- What you type stays a pull quote, as before. Only lines the DM gives your character to say aloud (`<say who="You">`) become a bubble, on the right, with your name once it's known.
-- The opening scene uses it too: the dark elf's question is the first bubble. She's "The dark elf" until she tells you her name, but the tag links her to Sereth (`npc="Sereth"`), so her colour and "Cellmate" label are right from the start.
-- The parser (`src/engine/narration.ts`) works on half-written text, so bubbles fill in as the DM writes and no raw tag ever shows. Anything malformed falls back to prose. Old turns without tags look as before.
-- Watch on the next playtest: does the DM use say tags every time someone speaks, or drift back to inline quotes? Does the page feel too chat-like, or still like a book?
+- The DM now writes each spoken line as its own paragraph, `<say who="Sereth">Prepare to die.</say>`. Action and staging stay in the prose around it (docs/UPDATES.md, "Chat bubbles for dialogue").
+- Characters speak in pull quotes: face, name and role on a line above, then the words with a rule in their side's colour. Faces are initials until the image library, coloured by attitude: green friendly or allied, red unfriendly or hostile, grey neutral or unknown. This is James's call after trying bubbles for characters first.
+- What you type is a speech bubble on the right, with any chips inside. Lines the DM gives your character to say aloud (`<say who="You">`) are a pull quote like everyone else's.
+- Every character has a role, who they are to you in a word or two ("Cellmate", "Jailer", "Innkeeper"), shown beside their name and in the People tab. The DM sets it in spawn_npc and changes it with update_npc when the relationship shifts ("Jailer → Ally"). A passer-by who isn't worth spawning can take one on the line itself (`role="Stranger"`).
+- Old saves: Sereth and Old Tamsin get "Cellmate" and "Jailer" back on load. Anyone else without a role is listed to the DM, who is told to give each one this turn.
+- The opening line is "The dark elf", linked to Sereth (`npc="Sereth"`), so her colour and "Cellmate" label are right before you learn her name.
+- The parser (`src/engine/narration.ts`) works on half-written text, so quotes fill in as the DM writes and no raw tag ever shows. Anything malformed falls back to prose. Old turns without tags look as before.
+- Watch on the next playtest: does the DM tag every spoken line and fill in missing roles? Do roles read as helpful or as clutter?
 
 ## 2026-09-28: The composer, with ability and pack chips
 

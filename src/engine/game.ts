@@ -148,6 +148,14 @@ export const OPENING_SCENE: Scene = {
     "A damp stone corridor of iron-doored cells, lit by one guttering torch. Wet straw on the floors. The guard's stool and keys are at the far end.",
 };
 
+// Saves from before roles existed: the opening pair get theirs back. Anyone else
+// without one is flagged to the DM, who fills it in (see buildStateSummary).
+function withKnownRole(npc: Npc): Npc {
+  if (npc.role) return npc;
+  const opening = OPENING_NPCS.find((o) => o.name === npc.name);
+  return opening?.role ? { ...npc, role: opening.role } : npc;
+}
+
 export const OPENING_NPCS: Npc[] = [
   { name: "Sereth", role: "Cellmate", attitude: "neutral", note: "Sharp-tongued dark elf thief in the cell opposite. Wants out and trades help for help." },
   { name: "Old Tamsin", role: "Jailer", attitude: "unfriendly", note: "Bored dungeon guard who hums badly. Keeps the cell keys on his belt." },
@@ -304,7 +312,7 @@ export function parseGameState(raw: unknown): GameState | null {
     },
     stats: statsFor(who, build.statRaises),
     inventory: inventory as Item[],
-    npcs: npcs as Npc[],
+    npcs: (npcs as Npc[]).map(withKnownRole),
     flags: flags as Record<string, string>,
     scene: { name: scene.name as string, description: scene.description as string },
     story: { summary: story.summary as string, turn: story.turn as number },

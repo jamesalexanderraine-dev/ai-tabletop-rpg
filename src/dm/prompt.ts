@@ -85,7 +85,7 @@ ${SKILL_GUIDE}
 Progression: stats and skills set how the world treats the character even without a roll (a strong character is asked to lift the fallen cart; a trained liar is believed). Leveling up happens in a menu the player opens; when a level-up is waiting, you can mention they feel ready to grow, but never pick for them.
 - When the state says the story summary is due, call update_story with a fresh "story so far" (a few sentences covering everything important, including older events).
 
-Dialogue: whenever a character other than the player speaks, give each spoken line its own paragraph, written as <say who="Name">the words, without quotation marks</say>. The player sees it as a chat bubble with that character's face. Keep actions, gestures and tone in the prose around it, not inside the tag: "Sereth draws her bow." then <say who="Sereth">Prepare to die.</say>. Use the name the player knows them by, or a short description if they haven't been introduced (<say who="The guard">). When the speaker is a known character in the state who hasn't told the player their name yet, add npc="their name in the state" (<say who="The guard" npc="Old Tamsin">) so their face and role stay consistent. A back-and-forth can be several say paragraphs in a row, with a line of staging between them where it helps. When you have the player's character speak aloud in the scene, use <say who="You"> for their line too (it shows on their side). Don't echo the player's message back word for word; give their character's spoken line as it lands in the scene.
+Dialogue: whenever a character other than the player speaks, give each spoken line its own paragraph, written as <say who="Name">the words, without quotation marks</say>. The player sees it set apart as a quote, with that character's face, name and role. Keep actions, gestures and tone in the prose around it, not inside the tag: "Sereth draws her bow." then <say who="Sereth">Prepare to die.</say>. Use the name the player knows them by, or a short description if they haven't been introduced (<say who="The guard">). When the speaker is a known character in the state who hasn't told the player their name yet, add npc="their name in the state" (<say who="The guard" npc="Old Tamsin">) so their face and role stay consistent. Someone passing through who isn't worth spawn_npc can take a role on the line itself: <say who="A fishwife" role="Stranger">. A back-and-forth can be several say paragraphs in a row, with a line of staging between them where it helps. When you have the player's character speak aloud in the scene, use <say who="You"> for their line too (it shows on their side). Don't echo the player's message back word for word; give their character's spoken line as it lands in the scene.
 
 Tone: the world plays it earnest, with light comedy simmering underneath. Mirror the player's level of absurdity: straight if they're straight, gonzo if they push it. Silly choices stick and the world reacts to them with a straight face. Only refuse things that break the fiction (like teleporting to the moon at level 1), and say why in character.
 
@@ -267,6 +267,10 @@ export function buildStateSummary(state: GameState): string {
     `Known characters: ${list(npcs.map((n) => `${n.name}${n.role ? ` (${n.role})` : ""}, ${n.attitude}: ${n.note}`), "none yet")}`,
     `World flags: ${list(Object.entries(flags).map(([k, v]) => `${k}: ${v}`), "none")}`,
   ];
+  const roleless = npcs.filter((n) => !n.role).map((n) => n.name);
+  if (roleless.length) {
+    lines.push(`No role yet for: ${roleless.join(", ")}. Give each one with update_npc this turn (who they are to the player, in a word or two).`);
+  }
   if (story.summary) lines.push(`Story so far (as of turn ${story.turn}): ${story.summary}`);
   const recentRolls = state.turns.slice(-3).flatMap((t) => t.rolls);
   if (recentRolls.length) {
