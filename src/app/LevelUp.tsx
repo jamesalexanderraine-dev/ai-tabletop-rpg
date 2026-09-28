@@ -26,7 +26,18 @@ const emptyChoice = (): LevelUpChoice => ({ skills: {}, ability: null, stat: nul
 
 // The level-up screen: the storyteller can tap "Choose for me" and carry on,
 // the min-maxer can pore over every pick. The engine validates the result.
-export function LevelUp({ game, onApply, onClose }: { game: GameState; onApply: (next: GameState) => void; onClose: () => void }) {
+// onApply saves the level-up (on the server when saves live there) and returns
+// the saved state, or throws with a message to show.
+export function LevelUp({
+  game,
+  onApply,
+  onClose,
+}: {
+  game: GameState;
+  onApply: (next: GameState, choice: LevelUpChoice) => Promise<GameState>;
+  onClose: () => void;
+}) {
+  const [saving, setSaving] = useState(false);
   const [choice, setChoice] = useState<LevelUpChoice>(emptyChoice);
   const [error, setError] = useState<string | null>(null);
   const needs = levelUpNeeds(game);
@@ -44,16 +55,23 @@ export function LevelUp({ game, onApply, onClose }: { game: GameState; onApply: 
     setChoice({ ...choice, skills: { ...choice.skills, [id]: next } });
   }
 
-  function confirm() {
+  async function confirm() {
     const outcome = applyLevelUp(game, choice);
     if (!outcome.ok) {
       setError(outcome.error);
       return;
     }
-    setChoice(emptyChoice());
-    setError(null);
-    onApply(outcome.state);
-    if (pendingLevelUps(outcome.state) === 0) onClose();
+    setSaving(true);
+    try {
+      const saved = await onApply(outcome.state, choice);
+      setChoice(emptyChoice());
+      setError(null);
+      if (pendingLevelUps(saved) === 0) onClose();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Couldn't save the level-up. Try again.");
+    } finally {
+      setSaving(false);
+    }
   }
 
   return (
@@ -169,7 +187,7 @@ export function LevelUp({ game, onApply, onClose }: { game: GameState; onApply: 
           {error}
         </p>
       )}
-      <button type="button" className="confirm" disabled={!complete} onClick={confirm}>
+      <button type="button" className="confirm" disabled={!complete || saving} onClick={confirm}>
         Become level {needs.level}
       </button>
     </SheetFrame>

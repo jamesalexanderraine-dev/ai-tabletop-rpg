@@ -1,10 +1,11 @@
 import Anthropic from "@anthropic-ai/sdk";
 import { NextResponse } from "next/server";
-import { parseGameState, validatePlayerInput } from "@/engine/game";
+import { parseGameState, validatePlayerInput, type GameState } from "@/engine/game";
 import { createClaudeDm, DmRefusalError } from "@/dm/claude";
 import { dmModel, hasAnthropicKey } from "@/dm/config";
 import { turnEventStream } from "@/dm/stream";
 import { playTurn } from "@/dm/turn";
+import { GAME_ID, gameStore } from "@/server/saves";
 
 // A turn is a few model calls when the DM rolls dice, so give it room.
 export const maxDuration = 60;
@@ -31,17 +32,36 @@ export async function POST(request: Request) {
   } catch {
     return error(400, "Couldn't read that request.");
   }
-  const { state: rawState, input } = (body ?? {}) as { state?: unknown; input?: unknown };
-  const state = parseGameState(rawState);
-  if (!state) return error(400, "The saved game looks damaged. Start a new game to keep playing.");
+  const { gameId, state: rawState, input } = (body ?? {}) as { gameId?: unknown; state?: unknown; input?: unknown };
   const playerInput = validatePlayerInput(input);
   if (!playerInput.ok) return error(400, playerInput.error);
 
+  // A server-saved game is loaded here and saved after the turn, so the server
+  // holds the truth. Without a database, the browser sends its saved state.
+  const store = gameStore();
+  let state: GameState | null;
+  if (typeof gameId === "string") {
+    if (!store) return error(503, "Server saves aren't set up on this deploy.");
+    if (!GAME_ID.test(gameId)) return error(404, "No such game.");
+    try {
+      state = await store.get(gameId);
+    } catch (err) {
+      console.error("Loading a save failed", err);
+      return error(502, "Couldn't load your game. Try again.");
+    }
+    if (!state) return error(404, "That game couldn't be found.");
+  } else {
+    state = parseGameState(rawState);
+    if (!state) return error(400, "The saved game looks damaged. Start a new game to keep playing.");
+  }
+  const current = state;
+
   // Validation errors above are plain JSON; from here on the turn streams.
-  const stream = turnEventStream(
-    (events) => playTurn(state, playerInput.value, createClaudeDm(), Math.random, events),
-    describeError,
-  );
+  const stream = turnEventStream(async (events) => {
+    const result = await playTurn(current, playerInput.value, createClaudeDm(), Math.random, events);
+    if (typeof gameId === "string" && store) await store.put(gameId, result.state);
+    return result;
+  }, describeError);
   return new Response(stream, {
     headers: {
       "Content-Type": "application/x-ndjson; charset=utf-8",

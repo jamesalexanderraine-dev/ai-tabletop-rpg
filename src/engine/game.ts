@@ -465,3 +465,26 @@ export function describeRoll(roll: Roll): string {
 export function capitalize(word: string): string {
   return word.charAt(0).toUpperCase() + word.slice(1);
 }
+
+// What the "continue a game" list shows, without loading the whole save.
+export interface GameSummary {
+  id: string;
+  name: string | null;
+  archetype: Archetype;
+  level: number;
+  scene: string;
+  turns: number;
+  updatedAt: number; // ms since epoch
+}
+
+export function summarizeGame(id: string, state: GameState, updatedAt: number): GameSummary {
+  return {
+    id,
+    name: state.character.name,
+    archetype: state.character.archetype,
+    level: state.character.level,
+    scene: state.scene.name,
+    turns: state.turns.length,
+    updatedAt,
+  };
+}

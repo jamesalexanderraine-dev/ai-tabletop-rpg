@@ -63,11 +63,13 @@ export function CharacterSheet({
   game,
   onClose,
   onNewGame,
+  newGameLabel = "Start a new game",
   busy,
 }: {
   game: GameState;
   onClose: () => void;
   onNewGame: () => void;
+  newGameLabel?: string;
   busy: boolean;
 }) {
   const [tab, setTab] = useState<Tab>("Character");
@@ -91,7 +93,7 @@ export function CharacterSheet({
       {tab === "Pack" && <PackTab game={game} />}
       {tab === "People" && <PeopleTab game={game} />}
       <button type="button" className="link danger" onClick={onNewGame} disabled={busy}>
-        Start a new game
+        {newGameLabel}
       </button>
     </SheetFrame>
   );

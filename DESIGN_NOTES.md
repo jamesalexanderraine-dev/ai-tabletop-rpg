@@ -2,6 +2,15 @@
 
 Short playtest notes, newest first. One entry per task: date, what changed, what felt good or bad, what to try next.
 
+## 2026-09-28: Server saves
+
+- Games can now live on the server (Upstash Redis on Vercel), so they follow you across preview links and devices. Previews are separate sites to the browser, which is why Sir John seemed to vanish on a new link.
+- With a database, the server loads and saves the game itself on every turn and level-up; the browser only remembers which game it was playing. Without one, everything works as before, saved in the browser.
+- The start screen lists saved games ("Welcome back": name, archetype, level, place, turns, last played) above the archetype cards. "New game" in the sheet becomes "Back to the start screen" and nothing is deleted.
+- A game saved in a browser before this uploads itself the first time that browser opens the site with a database connected, and a backup copy stays in the browser.
+- Tested with a fake Upstash and a fake Anthropic API: upload of a browser save, a turn saving, continuing on a fresh device, a second game, and a level-up, all at phone width.
+- Open question: anyone with the link can see the saved list. Fine for one player; accounts would be needed before sharing the link widely.
+
 ## 2026-09-27: Archetypes and grounded abilities
 
 - New games open on a "Who are you?" screen: Warrior, Rogue or Mage. Each has a 5-point stat spread, two starting skill ranks and a level 1 signature ability that fits the cell: Feat of Strength (bend the bars), Makeshift Disguise (pass as a guard) or Spark (the torch). The opening narration carries a one-line hook per archetype.

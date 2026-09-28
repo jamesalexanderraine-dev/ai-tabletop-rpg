@@ -449,6 +449,43 @@ textarea {
   color: var(--accent);
 }
 
+.picker h1.again {
+  margin-top: 2rem;
+}
+
+.saved-games {
+  list-style: none;
+  margin: 1rem 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.saved-game {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  padding: 0.8rem 1rem;
+  border: 1px solid var(--accent);
+  border-radius: 0.8rem;
+  background: var(--panel);
+  text-align: left;
+  cursor: pointer;
+}
+
+.saved-name {
+  font-size: 1.2rem;
+  color: var(--accent);
+}
+
+.archetype:disabled,
+.saved-game:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
 .archetypes {
   display: flex;
   flex-direction: column;
