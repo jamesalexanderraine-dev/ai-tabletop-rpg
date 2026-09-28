@@ -712,42 +712,201 @@ textarea {
 .compose {
   position: sticky;
   bottom: 0;
-  display: flex;
-  gap: 0.5rem;
-  align-items: flex-end;
-  padding: 0.6rem 1rem calc(0.6rem + env(safe-area-inset-bottom));
+  padding: 0.5rem 1rem calc(0.5rem + env(safe-area-inset-bottom));
   background: var(--bg);
   border-top: 1px solid var(--rule);
 }
 
-.compose textarea {
-  flex: 1;
-  min-width: 0;
+/* The composer: text on top, selectors and Go in a row underneath, like a chat app. */
+.composer {
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--rule);
+  border-radius: 0.8rem;
+  background: var(--panel);
+}
+
+.composer:focus-within {
+  border-color: var(--accent);
+}
+
+.composer textarea {
+  width: 100%;
   resize: none;
   /* 16px or more stops iOS Safari zooming in on focus. */
   font-size: 1rem;
   line-height: 1.4;
-  padding: 0.55rem 0.7rem;
-  border: 1px solid var(--rule);
-  border-radius: 0.6rem;
-  background: var(--panel);
-  outline-color: var(--accent);
+  padding: 0.55rem 0.75rem 0.2rem;
+  border: 0;
+  background: transparent;
+  outline: none;
 }
 
-.compose button {
-  flex: none;
-  padding: 0.55rem 1rem;
+.composer-row {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.25rem 0.35rem 0.35rem;
+}
+
+.selector {
+  padding: 0.3rem 0.6rem;
+  border: 1px solid var(--rule);
+  border-radius: 999px;
+  background: var(--bg);
+  color: var(--muted);
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+
+.selector.on {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.send {
+  margin-left: auto;
+  padding: 0.4rem 1rem;
   border: 0;
-  border-radius: 0.6rem;
+  border-radius: 999px;
   background: var(--accent);
   color: var(--bg);
   font-weight: 700;
   cursor: pointer;
 }
 
-.compose button:disabled {
+.send:disabled {
   opacity: 0.4;
   cursor: default;
+}
+
+/* Chips: in the composer (removable) and on the player's line in the story. */
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+  padding: 0.45rem 0.5rem 0;
+}
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.1rem 0.5rem;
+  border-radius: 999px;
+  font-size: 0.85rem;
+  font-style: normal;
+  white-space: nowrap;
+  border: 1px solid currentColor;
+}
+
+.chip.ability {
+  color: var(--stamina);
+}
+
+.chip.ability.mp {
+  color: var(--magic);
+}
+
+.chip.item {
+  color: var(--accent);
+}
+
+.chip.short {
+  color: var(--lose);
+}
+
+.chip button {
+  padding: 0 0 0 0.15rem;
+  border: 0;
+  background: none;
+  color: inherit;
+  font-size: 1rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.player .chip {
+  margin-right: 0.35rem;
+  vertical-align: 0.05em;
+}
+
+/* The selector trays open above the composer. */
+.tray {
+  max-height: min(45vh, 22rem);
+  overflow-y: auto;
+  margin-bottom: 0.5rem;
+  padding: 0.5rem;
+  border: 1px solid var(--rule);
+  border-radius: 0.8rem;
+  background: var(--panel);
+}
+
+.tray ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.tray-head {
+  margin: 0.1rem 0.3rem 0.4rem;
+  font-variant: small-caps;
+  letter-spacing: 0.04em;
+  color: var(--accent);
+}
+
+.tray-foot {
+  margin: 0.5rem 0.3rem 0.1rem;
+}
+
+.tray-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  width: 100%;
+  padding: 0.5rem 0.5rem;
+  border: 1px solid transparent;
+  border-radius: 0.6rem;
+  background: none;
+  text-align: left;
+  cursor: pointer;
+}
+
+.tray-item.on {
+  border-color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 8%, transparent);
+}
+
+.tray-item:disabled {
+  opacity: 0.55;
+  cursor: default;
+}
+
+.tray-name {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.6rem;
+  font-weight: 700;
+}
+
+.tray-name .cost {
+  flex: none;
+  font-weight: 400;
+  font-size: 0.85rem;
+  color: var(--muted);
+}
+
+.tray-name .cost.short {
+  color: var(--lose);
+}
+
+.tray-desc {
+  font-size: 0.85rem;
+  color: var(--muted);
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
 
 @media (prefers-reduced-motion: reduce) {

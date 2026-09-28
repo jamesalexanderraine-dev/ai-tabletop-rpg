@@ -51,7 +51,13 @@ export interface Turn {
   narration: string;
   rolls: Roll[];
   changes: Change[];
+  // Chips the player attached in the composer: an ability (by id) the engine
+  // applied up front, and items from their pack they're using.
+  ability?: string;
+  items?: string[];
 }
+
+export const MAX_ITEM_CHIPS = 3;
 
 export interface Trait {
   name: string;
@@ -263,11 +269,15 @@ export function parseGameState(raw: unknown): GameState | null {
     if (!isText(t.narration, 20_000) || !Array.isArray(t.rolls) || !Array.isArray(t.changes)) return null;
     if (t.rolls.length > MAX_ROLLS_PER_TURN || !t.rolls.every(isRoll)) return null;
     if (t.changes.length > 40 || !t.changes.every(isChange)) return null;
+    if (!(t.ability === undefined || isText(t.ability, MAX_NAME_LENGTH))) return null;
+    if (!(t.items === undefined || isTextList(t.items, MAX_ITEM_CHIPS, MAX_NAME_LENGTH))) return null;
     parsedTurns.push({
       player: t.player as string | null,
       narration: t.narration as string,
       rolls: t.rolls.map((r: Roll) => ({ ...r, skill: r.skill ?? null, skillBonus: r.skillBonus ?? 0 })),
       changes: t.changes as Change[],
+      ...(t.ability !== undefined && { ability: t.ability as string }),
+      ...(t.items !== undefined && { items: t.items as string[] }),
     });
   }
 

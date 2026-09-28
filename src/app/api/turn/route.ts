@@ -1,5 +1,6 @@
 import Anthropic from "@anthropic-ai/sdk";
 import { NextResponse } from "next/server";
+import { prepareAction } from "@/engine/actions";
 import { parseGameState, validatePlayerInput, type GameState } from "@/engine/game";
 import { createClaudeDm, DmRefusalError } from "@/dm/claude";
 import { dmModel, hasAnthropicKey } from "@/dm/config";
@@ -32,7 +33,13 @@ export async function POST(request: Request) {
   } catch {
     return error(400, "Couldn't read that request.");
   }
-  const { gameId, state: rawState, input } = (body ?? {}) as { gameId?: unknown; state?: unknown; input?: unknown };
+  const { gameId, state: rawState, input, ability, items } = (body ?? {}) as {
+    gameId?: unknown;
+    state?: unknown;
+    input?: unknown;
+    ability?: unknown;
+    items?: unknown;
+  };
   const playerInput = validatePlayerInput(input);
   if (!playerInput.ok) return error(400, playerInput.error);
 
@@ -55,10 +62,16 @@ export async function POST(request: Request) {
     if (!state) return error(400, "The saved game looks damaged. Start a new game to keep playing.");
   }
   const current = state;
+  // Chips from the composer: checked (and an ability paid for) before the DM starts.
+  const action = prepareAction(current, {
+    ability: ability === undefined || ability === null ? undefined : (ability as string),
+    items: items === undefined || items === null ? undefined : (items as string[]),
+  });
+  if (!action.ok) return error(400, action.error);
 
   // Validation errors above are plain JSON; from here on the turn streams.
   const stream = turnEventStream(async (events) => {
-    const result = await playTurn(current, playerInput.value, createClaudeDm(), Math.random, events);
+    const result = await playTurn(current, playerInput.value, createClaudeDm(), Math.random, events, action.value);
     if (typeof gameId === "string" && store) await store.put(gameId, result.state);
     return result;
   }, describeError);

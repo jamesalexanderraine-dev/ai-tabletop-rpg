@@ -1,8 +1,7 @@
 "use client";
 
-import { useEffect, useRef, useState, type FormEvent, type KeyboardEvent } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
-  MAX_PLAYER_INPUT_LENGTH,
   type Change,
   newGame,
   type GameState,
@@ -11,6 +10,7 @@ import {
   type Turn,
 } from "@/engine/game";
 import {
+  abilityFor,
   pendingLevelUps,
   poolOf,
   type BuiltInArchetype,
@@ -18,6 +18,7 @@ import {
   type LevelUpChoice,
 } from "@/engine/progression";
 import { CharacterSwitcher } from "./Characters";
+import { Composer, NO_CHIPS, type Chips } from "./Composer";
 import {
   createGame,
   deleteGame,
@@ -58,6 +59,7 @@ export default function Game() {
   const [startError, setStartError] = useState<string | null>(null);
   const [starting, setStarting] = useState(false);
   const [draft, setDraft] = useState("");
+  const [chips, setChips] = useState<Chips>(NO_CHIPS);
   const [live, setLive] = useState<LiveTurn | null>(null);
   const pendingInput = live?.input ?? null;
   const [error, setError] = useState<string | null>(null);
@@ -141,27 +143,28 @@ export default function Game() {
     }
   }, [live]);
 
-  function resizeInput() {
-    const el = inputRef.current;
-    if (!el) return;
-    el.style.height = "auto";
-    el.style.height = `${Math.min(el.scrollHeight, 160)}px`;
-  }
+  // Items used up or lost drop out of the chips.
+  const inventoryKey = game ? game.inventory.map((i) => i.name).join("\n") : "";
+  useEffect(() => {
+    const names = inventoryKey.split("\n");
+    setChips((ch) => (ch.items.every((n) => names.includes(n)) ? ch : { ...ch, items: ch.items.filter((n) => names.includes(n)) }));
+  }, [inventoryKey]);
 
-  async function send(event?: FormEvent) {
-    event?.preventDefault();
+  async function send() {
     const input = draft.trim();
     if (!game || !input || live) return;
-    setLive({ input, rolls: [], landed: 0, text: "", result: null });
+    const sent = chips;
+    const chipped = { ability: sent.ability ?? undefined, items: sent.items.length ? sent.items : undefined };
+    setLive({ input, ...chipped, rolls: [], landed: 0, text: "", result: null });
     setDraft("");
+    setChips(NO_CHIPS);
     setError(null);
-    requestAnimationFrame(resizeInput);
     const update = (fn: (l: LiveTurn) => LiveTurn) => setLive((l) => (l ? fn(l) : l));
     try {
       const response = await fetch("/api/turn", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(gameId ? { gameId, input } : { state: game, input }),
+        body: JSON.stringify({ ...(gameId ? { gameId } : { state: game }), input, ...chipped }),
       });
       if (!response.ok) {
         const data = (await response.json().catch(() => ({}))) as { error?: string };
@@ -183,14 +186,7 @@ export default function Game() {
       setLive(null);
       setError(err instanceof Error ? err.message : "The DM didn't answer. Try again.");
       setDraft(input);
-      requestAnimationFrame(resizeInput);
-    }
-  }
-
-  function onKeyDown(event: KeyboardEvent<HTMLTextAreaElement>) {
-    if (event.key === "Enter" && !event.shiftKey && !event.nativeEvent.isComposing) {
-      event.preventDefault();
-      void send();
+      setChips(sent);
     }
   }
 
@@ -203,6 +199,7 @@ export default function Game() {
     setGameId(null);
     setError(null);
     setDraft("");
+    setChips(NO_CHIPS);
     setOpen(null);
     if (storage === "server") listGames().then(setSaved).catch(() => undefined);
   }
@@ -249,6 +246,7 @@ export default function Game() {
       setGame(state);
       setError(null);
       setDraft("");
+      setChips(NO_CHIPS);
       setOpen(null);
     } catch (err) {
       setSwitchError(err instanceof Error ? err.message : "Couldn't load that character. Try again.");
@@ -329,9 +327,9 @@ export default function Game() {
 
       <div className="story">
         {game.turns.map((turn, i) => (
-          <TurnView key={i} turn={turn} first={i === 0} />
+          <TurnView key={i} turn={turn} first={i === 0} game={game} />
         ))}
-        {live && <LiveTurnView live={live} onLanded={() => setLive((l) => (l ? { ...l, landed: l.landed + 1 } : l))} />}
+        {live && <LiveTurnView live={live} game={game} onLanded={() => setLive((l) => (l ? { ...l, landed: l.landed + 1 } : l))} />}
         {error && (
           <p className="error" role="alert">
             {error}
@@ -339,25 +337,16 @@ export default function Game() {
         )}
       </div>
 
-      <form className="compose" onSubmit={send}>
-        <textarea
-          ref={inputRef}
-          value={draft}
-          onChange={(e) => {
-            setDraft(e.target.value);
-            resizeInput();
-          }}
-          onKeyDown={onKeyDown}
-          placeholder="What do you do?"
-          aria-label="What do you do?"
-          rows={1}
-          maxLength={MAX_PLAYER_INPUT_LENGTH}
-          enterKeyHint="send"
-        />
-        <button type="submit" disabled={!draft.trim() || pendingInput !== null}>
-          Go
-        </button>
-      </form>
+      <Composer
+        game={game}
+        draft={draft}
+        onDraft={setDraft}
+        chips={chips}
+        onChips={setChips}
+        onSend={() => void send()}
+        sending={pendingInput !== null}
+        inputRef={inputRef}
+      />
 
       {open === "sheet" && (
         <CharacterSheet
@@ -387,10 +376,30 @@ export default function Game() {
   );
 }
 
-function TurnView({ turn, first }: { turn: Turn; first: boolean }) {
+// What the player did, with any chips they attached.
+function PlayerLine({ text, ability, items, game }: { text: string; ability?: string; items?: string[]; game: GameState }) {
+  const abilityName = ability ? (abilityFor(game.character, ability)?.name ?? ability) : null;
+  return (
+    <p className="player">
+      {abilityName && (
+        <span className={poolOf(game.character) === "MP" ? "chip ability mp" : "chip ability"}>
+          <span aria-hidden>{"\u2726"}</span> {abilityName}
+        </span>
+      )}
+      {items?.map((name) => (
+        <span key={name} className="chip item">
+          <span aria-hidden>{"\u25c6"}</span> {name}
+        </span>
+      ))}
+      {text}
+    </p>
+  );
+}
+
+function TurnView({ turn, first, game }: { turn: Turn; first: boolean; game: GameState }) {
   return (
     <section className="turn">
-      {turn.player && <p className="player">{turn.player}</p>}
+      {turn.player && <PlayerLine text={turn.player} ability={turn.ability} items={turn.items} game={game} />}
       {turn.rolls.map((roll, i) => (
         <DiceRoll key={i} roll={roll} />
       ))}
@@ -432,18 +441,20 @@ function ChangeNote({ change }: { change: Change }) {
 // narration appears (as it's written) only once every die has landed.
 interface LiveTurn {
   input: string;
+  ability?: string;
+  items?: string[];
   rolls: Roll[];
   landed: number;
   text: string;
   result: GameState | null;
 }
 
-function LiveTurnView({ live, onLanded }: { live: LiveTurn; onLanded: () => void }) {
+function LiveTurnView({ live, game, onLanded }: { live: LiveTurn; game: GameState; onLanded: () => void }) {
   const diceSettled = live.landed >= live.rolls.length;
   const text = diceSettled ? live.text.trim() : "";
   return (
     <section className="turn">
-      <p className="player">{live.input}</p>
+      <PlayerLine text={live.input} ability={live.ability} items={live.items} game={game} />
       {live.rolls.map((roll, i) => (
         <DiceRoll key={i} roll={roll} animate onLanded={onLanded} />
       ))}
