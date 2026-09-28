@@ -1051,15 +1051,16 @@ textarea {
   flex: none;
   display: grid;
   place-items: center;
-  width: 1.8rem;
-  height: 1.8rem;
+  /* 1.3rem: 8px smaller than the first version's 1.8rem. */
+  width: 1.3rem;
+  height: 1.3rem;
   border-radius: 50%;
   background: var(--muted);
   color: var(--bg);
   font-variant: normal;
   letter-spacing: 0;
   font-weight: 700;
-  font-size: 0.9rem;
+  font-size: 0.7rem;
 }
 
 .say.friendly .avatar,
@@ -1089,8 +1090,8 @@ textarea {
 
 /* The quote's rule runs down from the middle of the face; the words line up with the name. */
 .narration .quote {
-  margin: 0 0 0 0.85rem;
-  padding-left: 1.3rem;
+  margin: 0 0 0 0.6rem;
+  padding-left: 1rem;
   border-left: 2px solid var(--muted);
   font-style: italic;
   white-space: pre-wrap;
