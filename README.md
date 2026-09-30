@@ -27,7 +27,7 @@ In the Vercel project: Settings → Environment Variables → add `ANTHROPIC_API
 
 Changing a variable does not update deploys that already exist. After adding or replacing the key, redeploy (Deployments → ⋯ on the latest one → Redeploy), or push a new commit to the pull request. If the game says Anthropic didn't accept the key, the deploy is usually still running with an old key.
 
-Optional: set `DM_MODEL` in either place to change which Claude model plays the DM (default `claude-opus-5`).
+Players pick the DM (Claude Opus 5.5 or Sonnet 5.5) on the Sheet. Optional: set `DM_MODEL` in either place to change the model used when no pick is sent and for designing archetypes (default `claude-opus-5-5`).
 
 ## Preview deploys (one-time setup)
 

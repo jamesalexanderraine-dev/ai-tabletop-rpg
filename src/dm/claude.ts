@@ -18,16 +18,18 @@ const MAX_TOKENS = 8000;
 // Guards against a tool loop that never settles.
 const MAX_MODEL_CALLS = 8;
 
-// Dollars per million tokens (input, output), for the cost estimate in the logs.
-const PRICES: Record<string, [number, number]> = {
-  "claude-opus-5": [5, 25],
-  "claude-sonnet-5": [2, 10],
-  "claude-haiku-4-5": [1, 5],
+// Dollars per million tokens (input, output, cache read), for the cost estimate in the logs.
+const PRICES: Record<string, [number, number, number]> = {
+  "claude-opus-5-5": [4, 20, 0.2],
+  "claude-sonnet-5-5": [2, 10, 0.2],
+  "claude-opus-5": [5, 25, 0.5],
+  "claude-sonnet-5": [2, 10, 0.2],
+  "claude-haiku-4-5": [1, 5, 0.1],
 };
 
 // The server re-runs a declined turn on another model, for the models that support it.
 export function supportsServerFallback(model: string): boolean {
-  return model.startsWith("claude-opus-5") || model.startsWith("claude-fable-5");
+  return model.startsWith("claude-opus-5") || model.startsWith("claude-fable-5") || model === "claude-sonnet-5-5";
 }
 
 export class DmRefusalError extends Error {}
@@ -68,8 +70,8 @@ export interface Usage {
 }
 
 export function logUsage(model: string, u: Usage, label = "DM turn usage") {
-  const [inPrice, outPrice] = PRICES[model] ?? [NaN, NaN];
-  const cost = (u.input * inPrice + u.cacheWrite * inPrice * 1.25 + u.cacheRead * inPrice * 0.1 + u.output * outPrice) / 1e6;
+  const [inPrice, outPrice, cacheReadPrice] = PRICES[model] ?? [NaN, NaN, NaN];
+  const cost = (u.input * inPrice + u.cacheWrite * inPrice * 1.25 + u.cacheRead * cacheReadPrice + u.output * outPrice) / 1e6;
   console.log(label, JSON.stringify({ model, ...u, estimatedUsd: Number.isNaN(cost) ? null : cost.toFixed(4) }));
 }
 

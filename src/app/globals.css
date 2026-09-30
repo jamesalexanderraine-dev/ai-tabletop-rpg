@@ -544,6 +544,40 @@ textarea {
   color: var(--bg);
 }
 
+.dm-picker {
+  margin: 1.2rem 0 0.8rem;
+}
+
+.dm-picker [role="radiogroup"] {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.dm-option {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  padding: 0.5rem 0.7rem;
+  border: 1px solid var(--rule);
+  border-radius: 0.6rem;
+  background: none;
+  color: var(--ink);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.dm-option .small {
+  color: var(--muted);
+}
+
+.dm-option.on {
+  border-color: var(--accent);
+  box-shadow: inset 0 0 0 1px var(--accent);
+  background: var(--panel);
+}
+
 .rows {
   list-style: none;
   margin: 0;

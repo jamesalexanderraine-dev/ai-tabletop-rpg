@@ -21,7 +21,7 @@ A single-player RPG where an LLM Dungeon Master improvises story and rulings on 
 - **Code owns the truth.** Dice, HP, XP, inventory, flags, NPC attitudes and location live in engine state. The model only proposes changes through tools; the engine validates and applies them, and rejects impossible calls with an error the DM can re-narrate.
 - **The engine rolls, never the model.** Randomness is injected (`Rng`) so every engine function is testable deterministically.
 - **Keys stay on the server.** Only route handlers and server code import from `src/dm`. Never expose `ANTHROPIC_API_KEY` to the client or log it.
-- **The DM sits behind one interface** so another model can be swapped in later. The model id comes from `DM_MODEL` (default in `src/dm/config.ts`).
+- **The DM sits behind one interface** so another model can be swapped in later. Players switch between the models in `src/shared/dmModels.ts` on the Sheet; `DM_MODEL` overrides the default (`src/dm/config.ts`). The 5.5 models reject forced `tool_choice`: ask for the tool in the prompt and check the call happened.
 - The DM gets a compact state summary each turn, not the full transcript.
 
 ## Working conventions

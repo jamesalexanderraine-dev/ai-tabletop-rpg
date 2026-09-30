@@ -5,6 +5,7 @@
 
 import { parseGameState, type GameState, type GameSummary } from "@/engine/game";
 import type { BuiltInArchetype, CustomArchetype, LevelUpChoice } from "@/engine/progression";
+import { DEFAULT_DM_MODEL, isDmModelId, type DmModelId } from "@/shared/dmModels";
 
 export type SaveStorage = "server" | "browser";
 
@@ -13,6 +14,7 @@ export type SaveStorage = "server" | "browser";
 const SAVE_KEY = "aidm.game.v1";
 const BACKUP_KEY = "aidm.game.v1.uploaded";
 const CURRENT_KEY = "aidm.current";
+const DM_MODEL_KEY = "aidm.dmModel";
 
 function read(key: string): string | null {
   try {
@@ -29,6 +31,16 @@ function write(key: string, value: string | null) {
   } catch {
     // Blocked or full storage: the game still plays, it just won't be remembered here.
   }
+}
+
+// Which DM this browser plays with, picked on the sheet.
+export function loadDmModel(): DmModelId {
+  const saved = read(DM_MODEL_KEY);
+  return isDmModelId(saved) ? saved : DEFAULT_DM_MODEL;
+}
+
+export function saveDmModel(model: DmModelId) {
+  write(DM_MODEL_KEY, model);
 }
 
 async function call<T>(url: string, init?: RequestInit): Promise<T> {
