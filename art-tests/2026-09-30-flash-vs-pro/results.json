@@ -1,0 +1,214 @@
+{
+ "prompts": {
+  "style": "Sword-and-sorcery comic art in the spirit of 1970s-80s Conan the Barbarian and Masters of the Universe: bold confident ink outlines, dramatic lighting, saturated flat colours with hard cel shading and halftone-dot shading, pulpy and dramatic. No text, no logos, no speech bubbles.",
+  "frame": "Composition: a tight crop from the middle of a larger illustration, so the artwork runs off all four edges of the image. Nothing surrounds the art: no border, no white or cream margin, no paper, no frame, no panel outline.",
+  "scene_rule": "Show only what is described. If no people or creatures are mentioned, the scene is empty of them: no figures, silhouettes or onlookers.",
+  "portrait": "Tight portrait of {who}: face and neck only, cropped just at the tips of the shoulders, the face filling most of the frame, looking toward the viewer. Plain dark background, one simple strong light, bold readable features.",
+  "characters": {
+   "sorcerer": "a young human sorcerer with messy dark hair and soot on their cheeks",
+   "elf": "a dark elf prisoner with grey skin, white hair and pale eyes, a wry look",
+   "jailer": "a heavy-set human jailer with a scarred face and an iron helmet",
+   "innkeeper": "a cheerful halfling innkeeper with red curly hair and a flour-dusted apron strap"
+  },
+  "locations": {
+   "cell": "A prison cell at night: iron bars and one burning torch. Beyond the bars, a pair of eyes in the dark.",
+   "tavern": "An empty tavern at night, lit only by a big stone hearth with a roaring fire.",
+   "road": "A lone lantern hanging from a post beside a forest road at night, low mist between the trees.",
+   "ruins": "A vast underground hall of ancient brass machines around one great glowing core."
+  }
+ },
+ "results": [
+  {
+   "model": "gemini-3-pro-image",
+   "subject": "face-sorcerer",
+   "kind": "portrait",
+   "seconds": 19.9,
+   "image_tokens": 1120,
+   "output_tokens": 1269,
+   "thought_tokens": 221,
+   "prompt_tokens": 179,
+   "raw_frame": "clean",
+   "cleanup": "ok"
+  },
+  {
+   "model": "gemini-3-pro-image",
+   "subject": "face-elf",
+   "kind": "portrait",
+   "seconds": 18.0,
+   "image_tokens": 1120,
+   "output_tokens": 1303,
+   "thought_tokens": 315,
+   "prompt_tokens": 182,
+   "raw_frame": "clean",
+   "cleanup": "ok"
+  },
+  {
+   "model": "gemini-3-pro-image",
+   "subject": "face-jailer",
+   "kind": "portrait",
+   "seconds": 21.9,
+   "image_tokens": 1120,
+   "output_tokens": 1304,
+   "thought_tokens": 231,
+   "prompt_tokens": 180,
+   "raw_frame": "clean",
+   "cleanup": "ok"
+  },
+  {
+   "model": "gemini-3-pro-image",
+   "subject": "face-innkeeper",
+   "kind": "portrait",
+   "seconds": 18.4,
+   "image_tokens": 1120,
+   "output_tokens": 1291,
+   "thought_tokens": 259,
+   "prompt_tokens": 183,
+   "raw_frame": "clean",
+   "cleanup": "ok"
+  },
+  {
+   "model": "gemini-3.1-flash-image",
+   "subject": "face-sorcerer",
+   "kind": "portrait",
+   "seconds": 9.2,
+   "image_tokens": 1120,
+   "output_tokens": 1529,
+   "thought_tokens": null,
+   "prompt_tokens": 179,
+   "raw_frame": "clean",
+   "cleanup": "ok"
+  },
+  {
+   "model": "gemini-3.1-flash-image",
+   "subject": "face-elf",
+   "kind": "portrait",
+   "seconds": 9.6,
+   "image_tokens": 1120,
+   "output_tokens": 1434,
+   "thought_tokens": null,
+   "prompt_tokens": 182,
+   "raw_frame": "trim",
+   "cleanup": "ok"
+  },
+  {
+   "model": "gemini-3.1-flash-image",
+   "subject": "face-jailer",
+   "kind": "portrait",
+   "seconds": 10.3,
+   "image_tokens": 1120,
+   "output_tokens": 1500,
+   "thought_tokens": null,
+   "prompt_tokens": 180,
+   "raw_frame": "clean",
+   "cleanup": "ok"
+  },
+  {
+   "model": "gemini-3.1-flash-image",
+   "subject": "face-innkeeper",
+   "kind": "portrait",
+   "seconds": 9.6,
+   "image_tokens": 1120,
+   "output_tokens": 1584,
+   "thought_tokens": null,
+   "prompt_tokens": 183,
+   "raw_frame": "trim",
+   "cleanup": "ok"
+  },
+  {
+   "model": "gemini-3-pro-image",
+   "subject": "loc-cell",
+   "kind": "scene",
+   "seconds": 17.7,
+   "image_tokens": 1120,
+   "output_tokens": 1312,
+   "thought_tokens": 238,
+   "prompt_tokens": 174,
+   "raw_frame": "trim",
+   "cleanup": "ok"
+  },
+  {
+   "model": "gemini-3-pro-image",
+   "subject": "loc-tavern",
+   "kind": "scene",
+   "seconds": 18.4,
+   "image_tokens": 1120,
+   "output_tokens": 1271,
+   "thought_tokens": 190,
+   "prompt_tokens": 167,
+   "raw_frame": "clean",
+   "cleanup": "ok"
+  },
+  {
+   "model": "gemini-3-pro-image",
+   "subject": "loc-road",
+   "kind": "scene",
+   "seconds": 19.1,
+   "image_tokens": 1120,
+   "output_tokens": 1276,
+   "thought_tokens": 244,
+   "prompt_tokens": 169,
+   "raw_frame": "clean",
+   "cleanup": "ok"
+  },
+  {
+   "model": "gemini-3-pro-image",
+   "subject": "loc-ruins",
+   "kind": "scene",
+   "seconds": 27.5,
+   "image_tokens": 1120,
+   "output_tokens": 1275,
+   "thought_tokens": 211,
+   "prompt_tokens": 163,
+   "raw_frame": "clean",
+   "cleanup": "ok"
+  },
+  {
+   "model": "gemini-3.1-flash-image",
+   "subject": "loc-cell",
+   "kind": "scene",
+   "seconds": 9.1,
+   "image_tokens": 1120,
+   "output_tokens": 1502,
+   "thought_tokens": null,
+   "prompt_tokens": 174,
+   "raw_frame": "trim",
+   "cleanup": "ok"
+  },
+  {
+   "model": "gemini-3.1-flash-image",
+   "subject": "loc-tavern",
+   "kind": "scene",
+   "seconds": 10.5,
+   "image_tokens": 1120,
+   "output_tokens": 1606,
+   "thought_tokens": null,
+   "prompt_tokens": 167,
+   "raw_frame": "clean",
+   "cleanup": "ok"
+  },
+  {
+   "model": "gemini-3.1-flash-image",
+   "subject": "loc-road",
+   "kind": "scene",
+   "seconds": 9.1,
+   "image_tokens": 1120,
+   "output_tokens": 1390,
+   "thought_tokens": null,
+   "prompt_tokens": 169,
+   "raw_frame": "trim",
+   "cleanup": "ok"
+  },
+  {
+   "model": "gemini-3.1-flash-image",
+   "subject": "loc-ruins",
+   "kind": "scene",
+   "seconds": 9.7,
+   "image_tokens": 1120,
+   "output_tokens": 1464,
+   "thought_tokens": null,
+   "prompt_tokens": 163,
+   "raw_frame": "clean",
+   "cleanup": "ok"
+  }
+ ]
+}

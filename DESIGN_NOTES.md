@@ -2,6 +2,13 @@
 
 Short playtest notes, newest first. One entry per task: date, what changed, what felt good or bad, what to try next.
 
+## 2026-09-30: Art style tests (Milestone 4 groundwork)
+
+- Tried about a dozen image styles with Gemini's image models. The barbarian comic style (Conan, Masters of the Universe) won: bold and readable even in 21px speaker circles. Details and images are in `art-tests/`.
+- Fixed its two problems in the prompts: borders (describe each image as a crop from inside a larger illustration, and never mention paperbacks or printing) and unrequested people (a scene rule: show only what is described). A cleanup script catches the borders that still slip through.
+- Generation takes 10 to 20 seconds and $0.07 to $0.13 an image, so the game won't generate during play. Locations and NPC portraits will come from a pre-made library with 2 or 3 varied takes per location. Only the player's portrait is generated live, once per character.
+- Flash vs Pro on 4 characters and 4 locations: Flash is half the price and twice as fast, and holds the style well, but misses some character details. Next: draft the library catalogue and pick a model for the bulk run.
+
 ## 2026-09-28: Pick the DM: Opus 5.5 or Sonnet 5.5
 
 - The Sheet has a "Dungeon Master" picker: Claude Opus 5.5 (the new default, was Opus 5) or Claude Sonnet 5.5 (released today, half the price per token and faster). The pick is remembered in this browser and applies from the next turn. The server only runs models on the list; anything else gets the default.
