@@ -2,6 +2,7 @@
 
 Usage:
   GEMINI_API_KEY=... python3 art-tests/tools/imagegen.py <out_dir> <model> [<model> ...]
+  GEMINI_API_KEY=... python3 art-tests/tools/imagegen.py <out_dir> --spec <spec.json>
 
 Writes <out_dir>/<model>/<subject>.webp (cleaned) plus <out_dir>/results.json with per-image
 seconds, token counts and the cleanup outcome. Needs Pillow (pip install pillow).
@@ -74,7 +75,23 @@ def job(out, model, kind, sid, text):
             "prompt_tokens": usage.get("promptTokenCount"), "raw_frame": raw_class, "cleanup": status}
 
 
+def run_spec(out, spec_path):
+    """Run a JSON spec: {"subjects": [{"id", "kind": "scene"|"portrait", "text"}], "runs": {model: takes}}."""
+    spec = json.load(open(spec_path))
+    jobs = [(out, m, s["kind"], f'{s["id"]}-{k + 1}', s["text"])
+            for s in spec["subjects"] for m, takes in spec["runs"].items() for k in range(takes)]
+    with cf.ThreadPoolExecutor(8) as ex:
+        results = list(ex.map(lambda j: job(*j), jobs))
+    for r in results:
+        print(r, flush=True)
+    json.dump({"prompts": {"style": STYLE, "frame": FRAME, "scene_rule": SCENE_RULE, "portrait": PORTRAIT},
+               "spec": spec, "results": results}, open(f"{out}/results.json", "w"), indent=1)
+
+
 if __name__ == "__main__":
+    if sys.argv[2] == "--spec":
+        run_spec(sys.argv[1], sys.argv[3])
+        sys.exit()
     out, models = sys.argv[1], sys.argv[2:]
     jobs = [(out, m, "portrait", f"face-{k}", v) for m in models for k, v in CHARACTERS.items()]
     jobs += [(out, m, "scene", f"loc-{k}", v) for m in models for k, v in LOCATIONS.items()]

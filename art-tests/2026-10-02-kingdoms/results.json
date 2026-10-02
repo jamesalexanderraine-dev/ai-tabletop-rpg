@@ -1,0 +1,124 @@
+{
+ "prompts": {
+  "style": "Sword-and-sorcery comic art in the spirit of 1970s-80s Conan the Barbarian and Masters of the Universe: bold confident ink outlines, dramatic lighting, saturated flat colours with hard cel shading and halftone-dot shading, pulpy and dramatic. No text, no logos, no speech bubbles.",
+  "frame": "Composition: a tight crop from the middle of a larger illustration, so the artwork runs off all four edges of the image. Nothing surrounds the art: no border, no white or cream margin, no paper, no frame, no panel outline.",
+  "scene_rule": "Show only what is described. If no people or creatures are mentioned, the scene is empty of them: no figures, silhouettes or onlookers.",
+  "portrait": "Tight portrait of {who}: face and neck only, cropped just at the tips of the shoulders, the face filling most of the frame, looking toward the viewer. Plain dark background, one simple strong light, bold readable features."
+ },
+ "spec": {
+  "subjects": [
+   {
+    "id": "dwarf-gate",
+    "kind": "scene",
+    "text": "The entrance to a dwarf kingdom high in a snowy mountain range, built over a waterfall and inspired by Frank Lloyd Wright's Fallingwater: long horizontal stone terraces cantilevered out over the falling water, deep overhangs, bands of windows, the river pouring through and beneath the building. Everything is carved from and built into the living rock of the mountain, with heavy dwarven stonework and great bronze doors set into the cliff."
+   },
+   {
+    "id": "orc-capital",
+    "kind": "scene",
+    "text": "The capital of an orc kingdom in volcanic badlands at the edge of a frozen northern region. Towers, walls, gates and bridges are built entirely from enormous skulls and bones, absurdly over the top: skull towers stacked on skull towers, ribcage archways, a gate shaped like a giant screaming skull, bone spikes on everything, so hardcore it is almost funny. Rivers of lava glow below, snow lies on the black rock, smoke fills the sky."
+   }
+  ],
+  "runs": {
+   "gemini-3-pro-image": 2,
+   "gemini-3.1-flash-image": 2
+  }
+ },
+ "results": [
+  {
+   "model": "gemini-3-pro-image",
+   "subject": "dwarf-gate-1",
+   "kind": "scene",
+   "seconds": 17.0,
+   "image_tokens": 1120,
+   "output_tokens": 1286,
+   "thought_tokens": 270,
+   "prompt_tokens": 235,
+   "raw_frame": "clean",
+   "cleanup": "ok"
+  },
+  {
+   "model": "gemini-3-pro-image",
+   "subject": "dwarf-gate-2",
+   "kind": "scene",
+   "seconds": 18.4,
+   "image_tokens": 1120,
+   "output_tokens": 1322,
+   "thought_tokens": 194,
+   "prompt_tokens": 235,
+   "raw_frame": "clean",
+   "cleanup": "ok"
+  },
+  {
+   "model": "gemini-3.1-flash-image",
+   "subject": "dwarf-gate-1",
+   "kind": "scene",
+   "seconds": 8.5,
+   "image_tokens": 1120,
+   "output_tokens": 1483,
+   "thought_tokens": null,
+   "prompt_tokens": 235,
+   "raw_frame": "clean",
+   "cleanup": "ok"
+  },
+  {
+   "model": "gemini-3.1-flash-image",
+   "subject": "dwarf-gate-2",
+   "kind": "scene",
+   "seconds": 9.0,
+   "image_tokens": 1120,
+   "output_tokens": 1457,
+   "thought_tokens": null,
+   "prompt_tokens": 235,
+   "raw_frame": "clean",
+   "cleanup": "ok"
+  },
+  {
+   "model": "gemini-3-pro-image",
+   "subject": "orc-capital-1",
+   "kind": "scene",
+   "seconds": 17.3,
+   "image_tokens": 1120,
+   "output_tokens": 1335,
+   "thought_tokens": 233,
+   "prompt_tokens": 242,
+   "raw_frame": "trim",
+   "cleanup": "ok"
+  },
+  {
+   "model": "gemini-3-pro-image",
+   "subject": "orc-capital-2",
+   "kind": "scene",
+   "seconds": 16.9,
+   "image_tokens": 1120,
+   "output_tokens": 1344,
+   "thought_tokens": 219,
+   "prompt_tokens": 242,
+   "raw_frame": "clean",
+   "cleanup": "ok"
+  },
+  {
+   "model": "gemini-3.1-flash-image",
+   "subject": "orc-capital-1",
+   "kind": "scene",
+   "seconds": 10.6,
+   "image_tokens": 1120,
+   "output_tokens": 1534,
+   "thought_tokens": null,
+   "prompt_tokens": 242,
+   "raw_frame": "clean",
+   "cleanup": "ok"
+  },
+  {
+   "model": "gemini-3.1-flash-image",
+   "subject": "orc-capital-2",
+   "kind": "scene",
+   "seconds": 9.9,
+   "image_tokens": 1120,
+   "output_tokens": 1542,
+   "thought_tokens": null,
+   "prompt_tokens": 242,
+   "raw_frame": "clean",
+   "cleanup": "ok"
+  }
+ ]
+}

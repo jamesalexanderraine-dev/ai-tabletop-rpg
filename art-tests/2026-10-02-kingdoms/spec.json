@@ -1,0 +1,9 @@
+{
+  "subjects": [
+    {"id": "dwarf-gate", "kind": "scene",
+     "text": "The entrance to a dwarf kingdom high in a snowy mountain range, built over a waterfall and inspired by Frank Lloyd Wright's Fallingwater: long horizontal stone terraces cantilevered out over the falling water, deep overhangs, bands of windows, the river pouring through and beneath the building. Everything is carved from and built into the living rock of the mountain, with heavy dwarven stonework and great bronze doors set into the cliff."},
+    {"id": "orc-capital", "kind": "scene",
+     "text": "The capital of an orc kingdom in volcanic badlands at the edge of a frozen northern region. Towers, walls, gates and bridges are built entirely from enormous skulls and bones, absurdly over the top: skull towers stacked on skull towers, ribcage archways, a gate shaped like a giant screaming skull, bone spikes on everything, so hardcore it is almost funny. Rivers of lava glow below, snow lies on the black rock, smoke fills the sky."}
+  ],
+  "runs": {"gemini-3-pro-image": 2, "gemini-3.1-flash-image": 2}
+}
