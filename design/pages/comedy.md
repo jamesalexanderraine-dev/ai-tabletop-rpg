@@ -1,0 +1,36 @@
+# 😄 Comedy
+
+- Notion: https://app.notion.com/p/3f42bc887e0581ab9d2ae70b15cf43ef
+- Fetched: 2026-10-09T01:11:26.665Z
+- Last edited: 2026-10-09T01:11:26.665Z
+
+---
+
+> 😄 The comedy landscape of the whole world: the one unifying sin under the humor, the family of comedic **engines** (mechanisms that deliver the laughs), and how each region **weights** them. Scoped to comedy for now; may expand into a broader tone / writing-styles reference later. Status: **LEANING (James, 2026-10-09).** The detailed engine write-ups currently live on Mage City → Ivory-tower absurdity; this is the world-level map.
+## The one unifying sin (the thematic spine)
+**The trappings of a virtue worn where the virtue has gone missing.** Across every region the comedy (and the tragedy) rhymes on this single root: the *performance* of a worth, with the substance hollowed out.
+- **Mages** — vanity of **intellect** (erudition as status, cleverness for other clever people).
+- **The delta emperor** — vanity of **royalty** (grandeur as birthright; ceremony and self-importance because he's the emperor and that's meant to be enough).
+- **The proceduralist councilman** — **courtesy** without care (forms of respect venerated, actual respect for people gone).
+- **The killer-monks** — **holiness** without humanity.
+- **The holy city** — **scrupulousness** without conscience (endless care spent on trivial rules; the plain, important commandments explained away). The **inverse of the delta**: where the delta wears *zero regard*, the holy city wears *hyper-regard* — every trivial act freighted with cosmic moral weight.
+This is why the world feels unified: same sin, different costume, everywhere.
+## The comedy engines (the mechanisms)
+Somewhat independent of the theme — these are *how* a bit lands, not what it's about. A **family**, drawn on for variety; don't let one dominate. A useful realization: **three of the four are the same move — a manner/content mismatch — just with different pairings.** That shared grammar is what makes the humor feel like one world even as the flavor varies wildly. (Full write-ups on Mage City → Ivory-tower absurdity.)
+- **Engine 1 — Good principle misapplied** (actor is the *fool*). A genuine virtue (consent, respect, autonomy) venerated as dogma so hard the person is blind to the obvious human logic it was meant to serve; *the thing they do is actually wrong in the moment.* The person-versus-dogma theme as comedy. Ex: the consent-over-a-dying-man gag; the Sacha Baron Cohen professor.
+- **Engine 2 — Sincere and not-wrong, can't read the room** (actor is the *device*, the room is the *target*). What they're doing is *fine*; their sincere enthusiasm meets a room whose reaction exposes the room. Can make the oblivious outsider the only sane one. Ex (mechanism only, never the loaded specifics): the SBC giant-mosque pitch to a hostile room. Latent in the orb quest's suspicious mage and the rooted-city Luddite.
+- **Engine 3 — Comedy of register / flowery language** (*manner/content mismatch: grand manner, small content*). Satire of academic speech — ornate delivery, vocabulary as status display. "(All that to say, Turgeon was upset.)" The mage city's **signature** engine; you'd never run it in the delta.
+- **Engine 4 — Tonal collision / the tender brute** (*manner/content mismatch: warm manner, brutal content*). Savage content delivered with total sincere warmth, no wink, no one in the wrong. Output is **affection** for the character, not ridicule — it makes a monster your favorite. The **orcs'** signature engine.
+- **Engine 5 — Excess & moral desensitization / shock comedy** (the **delta's** register). Immoral or shocking things witnessed and enjoyed with zero regard — the casualness is the joke (cheering a death as entertainment; the emperor's appetites as ambient, shrugged-at Tuesday). Cousin of Engine 4 (both dissonance), but blithe-indifference-over-immorality rather than warmth-over-brutality: generates gleeful shock rather than affection. Fits the delta being about appetite / "medieval Vegas."
+	- **OPEN — tone ceiling (James, park for later):** how suggestive vs. explicit the delta's excess gets, and whether it pushes the whole game toward **dark fantasy.** A real decision with consequences for the app and audience; the difference between implying the absurdity (laugh at the scale) and depicting it. Decide deliberately, later.
+- **Engine 6 — Comedy of exegesis / sacred misreading** (the **holy city's** register; the *inverse* of the delta — hyper-regard rather than zero regard). The sacred text is a straight line and the whole society is a game of telephone played on it. Trivial acts carry cosmic weight, so people confess and apologize constantly for meaningless things (ate dairy on the wrong day → must go confess). Lands cold with no outside knowledge. Two gears:
+	- **Innocent fork** — one ambiguous line, two sincere readings diverging into comedy *and* horror. Ex: "thou may only kill on Wednesdays." The priest sect reads it as sober scheduling (slaughter livestock on Wednesdays, a humane ordinance); the warrior-monk sect reads the *same sentence* as a mandate — Wednesday's divine *purpose* is killing. Nobody lied, nobody invented anything; it's a literal misreading of prose, both sides completely sincere. The fun is the *gap*, not either reader being a fool.
+	- **Motivated reading** — interpretation as the weapon, scripture mined for permission. The monks wave away the plain commandment ("thou shalt not kill") with shaky scholarly-sounding machinery ("we don't really read the later chapters — rather woo-woo, disputed canon") while lavishing enormous interpretive effort on the rule that licenses what they already wanted. Not an innocent accident: they chose the words that serve them over the meaning that would stop them, in good scholarly faith — which is the horror of it. Purest person-versus-dogma instance.
+	- **Note:** priests arguing fine points of absurd rules while ignoring the important ones is the same *shape* as mage city's proceduralist (care lavished on the trivial while what matters dies in the room) — same unifying sin — but the *engine* is distinct: the mage's is procedure-as-personality, the monk's is interpretation-itself-as-weapon.
+## Engines are weighted per region (and the weighting is characterization)
+Not a flat toolkit used evenly everywhere — each region has a comedic **center of gravity** that flows from what it's *about*, so regions differ in *what kind of funny they are*, not just in tone.
+- **Mage city:** Engine 3 (flowery register) constant signature + Engine 1 (good-principle-misapplied) heavy (dogma/procedure is the city's native joke) + Engine 2 available for the outsiders/useful mages who are right.
+- **Orcs:** Engine 4 (tender brute) signature.
+- **Delta / emperor:** Engine 5 (excess/desensitization) + register-and-collision pointed at pomp-and-appetite; thematically the vanity-of-royalty instance of the one sin, cousin to the mages' vanity-of-intellect.
+- **Holy city:** Engine 6 (comedy of exegesis / sacred misreading) **weighted very heavily** — its signature and center of gravity. The hyper-regard inverse of the delta.
+- Other regions lean elsewhere — see Mage City's "spread the ribbing" note. More engines welcome as they surface.
