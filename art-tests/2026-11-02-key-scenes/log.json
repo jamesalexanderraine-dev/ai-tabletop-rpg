@@ -1,0 +1,42 @@
+[
+  {
+    "id": "emperor",
+    "ok": true,
+    "secs": "14.9"
+  },
+  {
+    "id": "great-hall",
+    "ok": true,
+    "secs": "15.9"
+  },
+  {
+    "id": "joust",
+    "ok": true,
+    "secs": "16.2"
+  },
+  {
+    "id": "mage-city",
+    "ok": true,
+    "secs": "15.3"
+  },
+  {
+    "id": "orb",
+    "ok": true,
+    "secs": "15.1"
+  },
+  {
+    "id": "plateau",
+    "ok": true,
+    "secs": "16.3"
+  },
+  {
+    "id": "rooted-city",
+    "ok": true,
+    "secs": "15.7"
+  },
+  {
+    "id": "skin-witch",
+    "ok": true,
+    "secs": "15.5"
+  }
+]
