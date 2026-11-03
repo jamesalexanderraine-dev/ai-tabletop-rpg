@@ -2,6 +2,12 @@
 
 Short playtest notes, newest first. One entry per task: date, what changed, what felt good or bad, what to try next.
 
+## 2026-11-03: Prison opening and orc proofs
+
+- Ran the seven prison-opening shots and six orc scenes (Round 15). The cell finally matches canon (timber door with a grille), the bucket swap and the prison-on-the-road shots work, and the orcs read warm and funny, never sinister.
+- Bad: 2 of 14 prison takes drew a photo of a printed comic book, a new failure the framing line doesn't stop; orc skin colour drifted (sheet tightened); the chaplain drew a cross, but canon has no symbol for the faith.
+- Script: proofs now cap concurrency and wait out the API's 20-per-minute limit, and ONLY= reruns single takes.
+
 ## 2026-11-03: Skin witch reveal and reference images
 
 - The witch read as wearing a face because the prompt literally asked for a face "peeling like a mask". Restaged three ways (Round 14); the shadow-on-the-wall tell and the spine split work, the empty skin on the floor doesn't. Her sheet now says no masks, no second face.

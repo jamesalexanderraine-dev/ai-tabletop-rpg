@@ -1,0 +1,14 @@
+[
+ {"id":"village","name":"An orc settlement","aspectRatio":"16:9","request":{"kind":"location","location":"orc-village",
+  "action":"An orc settlement on a cold morning, seen from the path in."}},
+ {"id":"hospitality","name":"Have more stew","aspectRatio":"16:9","request":{"kind":"moment","location":"orc-hearth","crowd":true,
+  "action":"Comedy and warmth. A huge, terrifying-looking orc, beaming with delight, ladles another heaping slab of stew into the bowl of a small, nervous human traveller sitting by the fire, who hasn't finished the last one. The traveller looks alarmed; the orc looks overjoyed to have a guest."}},
+ {"id":"nursery","name":"Bone toys","aspectRatio":"16:9","request":{"kind":"moment","location":"orc-hearth","crowd":true,
+  "action":"Tender and funny. A little orc child sits on a fur rug happily playing with toys made of old bones: shaking a jawbone rattle, stacking vertebrae like building blocks, hugging a small skull with a stitched cloth hat on it like a doll. Their enormous, battle-scarred parent watches with a soft, proud smile. A happy nursery, nothing sinister."}},
+ {"id":"strongest","name":"The Strongest","aspectRatio":"16:9","request":{"kind":"moment","location":"orc-village","crowd":true,
+  "action":"Sports day for the title of THE STRONGEST, like a county fair. Mid-throw, a huge orc hurls a full wooden barrel high through the air in the Barrel Toss; behind, another orc strains, red-faced, holding back a great boulder. The whole settlement crowds round cheering, children on shoulders. Nobody is fighting; everyone is having the best day of the year."}},
+ {"id":"armourer","name":"The armour-maker","aspectRatio":"16:9","request":{"kind":"moment","location":"orc-village","characters":["orc-armourer"],
+  "action":"The orc armour-maker, beaming, holds up a finished breastplate made from a giant scorpion's plates, bound with sinew and bone toggles, a small horned skull fixed at one shoulder, for a wide-eyed human customer to try on. On the ground behind him lie the creatures the customer killed: a huge scorpion tail and a stack of dinosaur armour plates. Forge glow."}},
+ {"id":"tyrant","name":"The fire tyrant","aspectRatio":"16:9","request":{"kind":"moment","location":"ash-plain","crowd":true,
+  "action":"Action shot. A fire-breathing tyrannosaur, wingless, armoured in hard plates, roars a jet of fire across the ash plain. In the foreground three orc hunters in shell-and-bone armour brace their spears and grin, delighted rather than afraid."}}
+]

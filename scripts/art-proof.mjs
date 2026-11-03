@@ -1,7 +1,9 @@
 // Generates art proofs from the visual bible: node scripts/art-proof.mjs <scenes.json> <outDir> [takes]
 // scenes.json is a list of { id, name, aspectRatio, request, references? } where request is an ImageRequest
 // for composeImagePrompt and references is an optional list of { path, label } images sent alongside
-// the prompt (paths relative to the scenes file) so a character keeps the same look. Needs GEMINI_API_KEY. Writes <id>-<take>.png and log.json (prompts included).
+// the prompt (paths relative to the scenes file) so a character keeps the same look.
+// ONLY=wake-2,cell-1 reruns just those takes and merges them into the existing log.json.
+// Runs at most 8 requests at once and waits out per-minute rate limits (HTTP 429). Needs GEMINI_API_KEY. Writes <id>-<take>.png and log.json (prompts included).
 import fs from "node:fs";
 import path from "node:path";
 import { composeImagePrompt } from "../src/art/compose-image-prompt.ts";
@@ -24,20 +26,42 @@ const refText = refs => refs?.length
   : "";
 const jobs = scenes.flatMap(s => Array.from({ length: Number(takesArg) }, (_, k) =>
   ({ ...s, out: `${s.id}-${k + 1}`, prompt: refText(s.references) + composeImagePrompt(bible, s.request) })));
-const log = await Promise.all(jobs.map(async j => {
-  const t0 = Date.now();
+const only = process.env.ONLY?.split(",");
+const todo = only ? jobs.filter(j => only.includes(j.out)) : jobs;
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+async function generate(j) {
+  for (let attempt = 1; ; attempt++) {
+    const r = await request(j);
+    if (r.res.status !== 429 || attempt === 4) return r;
+    const wait = Number(/retry in ([\d.]+)s/.exec(r.body.error?.message ?? "")?.[1] ?? 30);
+    console.log(`${j.out}: rate-limited, retrying in ${Math.ceil(wait)}s`);
+    await sleep((wait + 2) * 1000);
+  }
+}
+async function request(j) {
   const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:generateContent`, {
     method: "POST",
     headers: { "content-type": "application/json", "x-goog-api-key": process.env.GEMINI_API_KEY },
     body: JSON.stringify({ contents: [{ parts: [...refParts(j.references), { text: j.prompt }] }],
       generationConfig: { responseModalities: ["IMAGE"], imageConfig: { aspectRatio: j.aspectRatio, imageSize: "1K" } } }),
   });
-  const body = await res.json();
+  return { res, body: await res.json() };
+}
+const results = [];
+let next = 0;
+await Promise.all(Array.from({ length: Math.min(8, todo.length) }, async () => {
+  while (next < todo.length) results.push(await run(todo[next++]));
+}));
+async function run(j) {
+  const t0 = Date.now();
+  const { res, body } = await generate(j);
   const secs = Number(((Date.now() - t0) / 1000).toFixed(1));
   const part = body.candidates?.[0]?.content?.parts?.find(p => p.inlineData);
   if (part) fs.writeFileSync(`${outDir}/${j.out}.png`, Buffer.from(part.inlineData.data, "base64"));
   const why = part ? undefined : body.candidates?.[0]?.finishReason ?? body.promptFeedback ?? body.error?.message ?? res.status;
   console.log(`${j.out}: ${part ? "ok" : "FAILED " + JSON.stringify(why)} (${secs}s)`);
   return { id: j.out, model: MODEL, ok: Boolean(part), secs, why, references: j.references?.map(r => r.path), prompt: j.prompt };
-}));
-fs.writeFileSync(`${outDir}/log.json`, JSON.stringify(log.sort((a, b) => a.id.localeCompare(b.id)), null, 2));
+}
+const logFile = `${outDir}/log.json`;
+const earlier = only && fs.existsSync(logFile) ? JSON.parse(fs.readFileSync(logFile, "utf8")).filter(e => !only.includes(e.id)) : [];
+fs.writeFileSync(logFile, JSON.stringify([...earlier, ...results].sort((a, b) => a.id.localeCompare(b.id)), null, 2));
