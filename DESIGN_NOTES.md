@@ -2,6 +2,12 @@
 
 Short playtest notes, newest first. One entry per task: date, what changed, what felt good or bad, what to try next.
 
+## 2026-11-03: Dwarven mountains landscape
+
+- Added dwarf region and location sheets from the Dwarven Mountains page and ran the sunward-face landscape (Round 16). Everything canon made it in (planted roofs, farm terraces, waterwheels, the gate over the falls) with no ornament.
+- Split result: one take nails the gate, the other the homes. Next prompt should tie the homes to the gate's style.
+- Canon note: the Notion page's establishing-shot section still says the interior shifts "toward the organic Gaudí interior", which its own 2026-10-04 reversal contradicts.
+
 ## 2026-11-03: Prison opening and orc proofs
 
 - Ran the seven prison-opening shots and six orc scenes (Round 15). The cell finally matches canon (timber door with a grille), the bucket swap and the prison-on-the-road shots work, and the orcs read warm and funny, never sinister.

@@ -92,6 +92,26 @@
         "orc bodies, skin, tusks and hair",
         "the palette"
       ]
+    },
+    "dwarves": {
+      "name": "The dwarven mountains",
+      "look": "an alpine range of grey stone, dark pine forest and snow-capped peaks at the headwaters of a river. Dwarven architecture is beauty without ornament, in the spirit of Frank Lloyd Wright and Mies van der Rohe: long, clean horizontal slabs of stone cantilevered out of the living rock over open air, deep overhangs, bands of windows, crisp right angles, every surface plain and perfectly made; it is beautiful because it works, never because it is decorated.",
+      "people": "dwarves in practical, perfectly made work clothes; any armour is plain, smooth, polished steel plate with no decoration.",
+      "palette": "pale grey granite, warm honey-coloured stone, the green of planted terraces, white water, snow and dark pine.",
+      "never": [
+        "carved ornament",
+        "runes",
+        "gold trim",
+        "giant statues",
+        "fantasy dwarf halls with pillars and braziers",
+        "grim iron doors",
+        "organic curves or Gaudí shapes"
+      ],
+      "canon": "Dwarven Mountains (live on the face, beauty without ornament, form follows function, the Fallingwater gate; all LOCKED); Regions (alpine range, pine, snow; headwaters of one river); Dwarves (plain white-harness armour).",
+      "proposed": [
+        "the palette",
+        "everyday dwarf clothing"
+      ]
     }
   },
   "characters": {
@@ -345,6 +365,12 @@
       "region": "orcs",
       "look": "open badlands: black rock and grey ash plains to the horizon, steam venting through patches of snow, distant smoking volcanoes, a freezing grey sky, no cover anywhere",
       "canon": "Orc Badlands (LOCKED)."
+    },
+    "dwarf-face": {
+      "name": "The sunward face of the dwarven mountains",
+      "region": "dwarves",
+      "look": "the whole sunward face of a great mountain, seen from across the valley. Hundreds of stone homes step out of and over each other up the slope like a terraced hillside town carved from the living rock, each flat roof a planted garden terrace for the home above. Below and between them, tier after tier of green farm terraces of barley cascade down the slope. In the centre a huge waterfall pours out of the rock, and built over and into it is the great gate: long horizontal stone terraces cantilevered across the falling water like Fallingwater made monumental. Stone channels carry water from the falls across the terraces and turn the waterwheels of forges, whose smoke rises from neat openings in the cliff. The river runs on down the valley through pine forest toward the distant lowlands; snow-capped peaks above",
+      "canon": "Dwarven Mountains: They live on the face (Mountain Dwelling, planted roofs, terraced farms, waterfall irrigation driving the forges); The establishing shot (LOCKED)."
     }
   }
 }
