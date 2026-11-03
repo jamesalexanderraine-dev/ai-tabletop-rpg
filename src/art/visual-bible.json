@@ -369,8 +369,13 @@
     "dwarf-face": {
       "name": "The sunward face of the dwarven mountains",
       "region": "dwarves",
-      "look": "the whole sunward face of a great mountain, seen from across the valley. Hundreds of stone homes step out of and over each other up the slope like a terraced hillside town carved from the living rock, each flat roof a planted garden terrace for the home above. Below and between them, tier after tier of green farm terraces of barley cascade down the slope. In the centre a huge waterfall pours out of the rock, and built over and into it is the great gate: long horizontal stone terraces cantilevered across the falling water like Fallingwater made monumental. Stone channels carry water from the falls across the terraces and turn the waterwheels of forges, whose smoke rises from neat openings in the cliff. The river runs on down the valley through pine forest toward the distant lowlands; snow-capped peaks above",
-      "canon": "Dwarven Mountains: They live on the face (Mountain Dwelling, planted roofs, terraced farms, waterfall irrigation driving the forges); The establishing shot (LOCKED)."
+      "look": "the whole sunward face of a great mountain, seen from across the valley. The homes are hundreds of plain rectangular stone blocks stacked and offset up the slope in the spirit of Habitat 67: each block shifted from the one below so that every roof is the planted garden terrace of the home above, blocks bridging and cantilevering over each other at different angles, open-air walkways and stairs threading between them, bands of glass windows; a dense, interlocking, three-dimensional hillside of homes carved from and built onto the living rock. Below and between them, tier after tier of green barley terraces cascade down the slope. In the centre a huge waterfall pours out of the rock, and the great gate is ONE great building built over and into it: long, wide horizontal stone floors cantilevered right across the falling water like Fallingwater made monumental, in exactly the same clean style as the homes. Stone channels carry water from the falls across the terraces and turn the waterwheels of forges, whose smoke rises from neat openings in the cliff. The river runs on down the valley through pine forest toward the distant lowlands; snow-capped peaks above",
+      "canon": "Dwarven Mountains: They live on the face (Mountain Dwelling reference, planted roofs, terraced farms, waterfall irrigation driving the forges); The establishing shot (LOCKED). Habitat 67 as a housing reference: James, 2026-11-03.",
+      "never": [
+        "boxy whitewashed hill-town cubes",
+        "thin walkways in place of the gate",
+        "pueblo adobe"
+      ]
     }
   }
 }

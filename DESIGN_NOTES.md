@@ -6,6 +6,7 @@ Short playtest notes, newest first. One entry per task: date, what changed, what
 
 - Added dwarf region and location sheets from the Dwarven Mountains page and ran the sunward-face landscape (Round 16). Everything canon made it in (planted roofs, farm terraces, waterwheels, the gate over the falls) with no ornament.
 - Split result: one take nails the gate, the other the homes. Next prompt should tie the homes to the gate's style.
+- Refined with Habitat 67 for the homes and the gate as one building in the same style: take 1 got both right in one image.
 - Canon note: the Notion page's establishing-shot section still says the interior shifts "toward the organic Gaudí interior", which its own 2026-10-04 reversal contradicts.
 
 ## 2026-11-03: Prison opening and orc proofs
