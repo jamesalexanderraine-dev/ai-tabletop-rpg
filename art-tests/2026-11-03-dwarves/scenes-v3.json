@@ -1,0 +1,6 @@
+[
+ {"id":"face-v3","name":"The dwarven mountains, with harbour and life","aspectRatio":"16:9","request":{"kind":"moment","location":"dwarf-face","crowd":true,
+  "action":"A grand establishing landscape on a clear, bright morning, full of life: the sunward face of the dwarven mountains, the most beautifully made place in the world. Tiny dwarves tend the rooftop vegetable gardens and walk the stairways; smoke rises from chimneys; barges come and go at the harbour below, where dockworkers swing cargo. Homes and gate share one architecture: plain stone, clean horizontal lines, bold cantilevers."}},
+ {"id":"harbour","name":"The river harbour","aspectRatio":"16:9","request":{"kind":"moment","location":"dwarf-harbour","crowd":true,
+  "action":"Mid-morning at the dwarven river harbour, seen from a quay. Dwarf dockworkers in leather aprons swing a crate of polished steel armour onto a barge with a counterweighted crane, checking every knot; a human wine merchant haggles briskly with a dwarf clerk over a stack of barrels; the next barge waits its turn. Purposeful, orderly, busy."}}
+]
