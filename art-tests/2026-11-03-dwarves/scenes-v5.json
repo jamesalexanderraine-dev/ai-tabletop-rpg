@@ -1,0 +1,6 @@
+[
+ {"id":"face-v5","name":"The mountain, harbour and market","aspectRatio":"16:9","request":{"kind":"moment","location":"dwarf-face","crowd":true,
+  "action":"A wide establishing landscape seen from far across the valley, the whole mountain in frame, on a clear bright morning full of life. The busy harbour and its neat market fill the lower third of the picture, crowded with barges, cranes, stalls and people; above it the homes with their rooftop vegetable gardens climb the face, the great gate spans the waterfall in the centre, and snowy peaks rise at the top. Tiny dwarves tend the gardens and walk the stairways; chimney smoke rises. Homes and gate share one architecture: plain stone, clean horizontal lines, bold cantilevers."}},
+ {"id":"market","name":"The harbour market","aspectRatio":"16:9","request":{"kind":"moment","location":"dwarf-harbour","crowd":true,
+  "action":"Mid-morning in the harbour market, seen from among the stalls with the busy quays and cranes just behind. A dwarf customer inspects a wine merchant's bottle with a magnifying lens, utterly serious; a human fishmonger lays out fish in a perfect line for a dwarf who is counting them; dwarf stallholders sell plain, flawless knives and pans; porters weave through with sacks. Crowded, orderly, everyone buying or selling, nobody idling."}}
+]

@@ -9,6 +9,7 @@ Short playtest notes, newest first. One entry per task: date, what changed, what
 - Refined with Habitat 67 for the homes and the gate as one building in the same style: take 1 got both right in one image.
 - Added the river harbour, food in the rooftop gardens and people (Round 17). Face take 2 is the best dwarf image so far; both harbour close-ups work.
 - Busier harbour (Round 18): pinning the harbour to the lower third kept the camera wide; face take 1 now beats Round 17. Crate labels came through as text, so labelled goods may need a 'no lettering on cargo' line.
+- Market stalls by the harbour (Round 19, James): replaces the sheet's 'no stalls'. Both landscapes and both market close-ups work, and the 'no lettering on crates' line stopped the crate text.
 - Canon note: the Notion page's establishing-shot section still says the interior shifts "toward the organic Gaudí interior", which its own 2026-10-04 reversal contradicts.
 
 ## 2026-11-03: Prison opening and orc proofs

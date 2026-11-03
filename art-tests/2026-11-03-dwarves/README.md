@@ -16,3 +16,7 @@ James asked for a trade harbour where the water meets the mountains, food in the
 ## Busier harbour (scenes-v4.json, log-v4.json, face-v4-*.webp, harbour-v2-*.webp)
 
 Harbour sheet rewritten for crowds (barges three deep, a row of cranes, warehouses in the cliff base, quay rail carts, streams of workers and traders); the landscape pins the harbour to the lower third. Face take 1 is the most complete dwarf image yet; take 2's homes slid back to boxy cubes. Harbour take 2 is the busiest (black border trimmed); take 1 printed "ARMOR"/"STEEL" on crates.
+
+## Harbour market (scenes-v5.json, log-v5.json, face-v5-*.webp, market-*.webp)
+
+James asked for market stalls by the harbour. The sheet's "no stalls" (an over-reading of "transaction, not revelry") is replaced by a neat dwarven market: identical plain stalls in straight rows, undyed awnings. Also added "no lettering on crates". Both landscapes show the market along the quay (take 2 is the most complete); both market close-ups work (a dwarf inspecting wine through a lens, fish counted in a perfect line). No crate text this round.
