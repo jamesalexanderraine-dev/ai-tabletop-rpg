@@ -1,0 +1,6 @@
+[
+ {"id":"face-v4","name":"The mountain and its busy harbour","aspectRatio":"16:9","request":{"kind":"moment","location":"dwarf-face","crowd":true,
+  "action":"A wide establishing landscape seen from far across the valley, the whole mountain in frame, on a clear bright morning full of life. The busy harbour fills the lower third of the picture, crowded with barges, cranes and people; above it the homes with their rooftop vegetable gardens climb the face, the great gate spans the waterfall in the centre, and snowy peaks rise at the top. Tiny dwarves tend the gardens and walk the stairways; chimney smoke rises. Homes and gate share one architecture: plain stone, clean horizontal lines, bold cantilevers."}},
+ {"id":"harbour-v2","name":"The busy harbour","aspectRatio":"16:9","request":{"kind":"moment","location":"dwarf-harbour","crowd":true,
+  "action":"A wide, high view along the length of the dwarven harbour at its busiest hour, packed with life from edge to edge: barges docking and casting off, a row of cranes swinging cargo, carts rolling along the quay rails, dwarf clerks checking ledgers, porters carrying sacks, traders from every region haggling. Everyone has a job and is doing it."}}
+]
