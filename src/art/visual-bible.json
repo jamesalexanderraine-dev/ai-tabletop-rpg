@@ -1,0 +1,203 @@
+{
+  "about": "Saved look sheets so the same character, place or region draws the same way every time. Every image prompt is built from these by composeImagePrompt(). 'canon' cites the Notion page a detail comes from; 'proposed' lists details Claude Code invented that James hasn't confirmed. Notion wins over this file.",
+  "style": {
+    "prompt": "Sword-and-sorcery comic art in the spirit of 1970s-80s Conan the Barbarian and Masters of the Universe: bold confident ink outlines, dramatic lighting, saturated flat colours with hard cel shading and halftone-dot shading, pulpy and dramatic. No text, no logos, no speech bubbles.",
+    "framing": "Composition: a tight crop from the middle of a larger illustration, so the artwork runs off all four edges of the image. Nothing surrounds the art: no border, no white or cream margin, no paper, no frame, no panel outline.",
+    "emptySceneRule": "Show only what is described. If no people or creatures are mentioned, the scene is empty of them: no figures, silhouettes or onlookers.",
+    "canon": "Locked style prompt (Art Style Proofs, Round 8); art direction LOCKED on Presentation & Visuals."
+  },
+  "regions": {
+    "delta": {
+      "name": "The Delta",
+      "look": "a permanent carnival that never packs up: raised plank boardwalks, timber-frame and clapboard buildings with tall flat painted false fronts like a frontier boomtown, striped canvas tents, rigging and bunting; gold leaf and grand columns only on a few permanent monuments. Hot, humid, lush river-delta air, hazy and damp.",
+      "people": "loud, colourful festival clothes; the rich wear the exotic beast trade: carved tusk pendants, coats made of tanned alligator hide, cloaks of huge impossible feathers. Everyone is human.",
+      "never": ["stone castles", "castle towers", "fortress walls"],
+      "canon": "The Delta: Architecture: a permanent fairground (LOCKED); Biome; exotic creature trade (LOCKED).",
+      "proposed": ["hazy, damp light as the delta's visual signature"]
+    },
+    "mage-city": {
+      "name": "Mage City",
+      "look": "a pale city on a flat-topped desert mesa: bone-white stone, sand-coloured fused glass and vitrified stone; sleek, flowing, curved towers in the spirit of Zaha Hadid that look too slender to stand, cantilevers over nothing, floating bridges and floating staircases hanging in mid-air between inward-facing towers; humble round mud-brick domes for the commoners at the mesa's foot.",
+      "people": "mages in long, layered robes of pale desert colours (bone, sand, sky blue) with tall stiff collars, every panel embroidered with diagrams and geometric script; commoners in plain undyed cotton and head-wraps.",
+      "never": ["red rock", "crystal spires", "Gothic spires", "pointed wizard hats"],
+      "canon": "Mage City: Architecture (LEANING), Hadid reference, floating stairs, commoner domes.",
+      "proposed": ["all mage and commoner dress"]
+    },
+    "north": {
+      "name": "The North",
+      "look": "make-do, never mastery: buildings are a patchwork of repairs, new timber lashed to old, hide over gaps; stone only for the lord's seat and military buildings. Trophies (antlers, furs, skulls), carved runes on lintels and beams, drying herbs and roots from rafters, bone charms by doors. Deep snow, glaciers and frozen lakes.",
+      "people": "furs, leather, undyed wool and iron; long hair, braids and heavy beards; bone charms, beads and toggles; simple stark earned facial tattoos (lines, dots, lip-to-chin marks) on adults.",
+      "palette": "dark browns, dark greys, black, undyed wool, raw leather, bone-white and antler-grey; nothing dyed.",
+      "never": ["bright dyed colours", "painted Skyrim-style Nordic decoration", "horned helmets", "corpse paint", "neat, well-made joinery"],
+      "canon": "The North: Architecture, dress and the earned face (LOCKED); Terrain and wildlife (LEANING)."
+    },
+    "elves": {
+      "name": "Elves",
+      "look": "the elven plateau: a flat-topped tableland on a mountain range cradling a still sacred lake; architecture in the manner of Gaudí's Sagrada Família, carved stone that looks grown: porous honeycomb spires, bone and melting-candle-wax shapes, encrusted with stone fruit, shells and leaves, warm sandstone and bright mosaic tile; a Greek-style aqueduct and fountains; ornamental gardens and vineyards.",
+      "people": "humans changed by the water: human faces with long pointed ears, ageless and immaculate; exquisite, ornate court dress in the same organic language (flowing layers embroidered with shells, leaves and bone-like curves) in jewel tones.",
+      "never": ["dark elves", "grey or black skin", "Gothic cathedrals", "plants or vines instead of carved stone", "floating islands"],
+      "canon": "Elves (one kind of elf, no dark elves; Gaudí, LEANING); The Hoarded Fountain (born human; ears permanent, LOCKED/LEANING); Regions (plateau, lake, vineyards).",
+      "proposed": ["elven court dress"]
+    },
+    "breadbasket": {
+      "name": "The breadbasket and the trade road",
+      "look": "soft, flat farm country: grain fields, timber villages, the busiest trade road in the world with wagons and travellers streaming past.",
+      "people": "plain medieval peasant and traveller clothes in wool and linen.",
+      "never": [],
+      "canon": "Story: The opening: the prison (LEANING)."
+    }
+  },
+  "characters": {
+    "emperor": {
+      "name": "The self-crowned emperor",
+      "region": "delta",
+      "body": "a heavy, soft, bloated human man of about fifty, jowly with several chins, always sweating",
+      "face": "flushed cheeks, small nervous eyes that dart sideways, thinning oiled dark hair, clean-shaven, a greasy shine",
+      "outfit": "a cloth-of-gold robe under a heavy fur mantle, heaps of gold chains, a ring on every finger, a carved tusk pendant",
+      "props": "his self-commissioned crown: brand-new gold made to look ancient, far too big, studded with too many jewels, never sitting quite straight",
+      "never": ["slug-like or inhuman", "muscular", "dignified"],
+      "canon": "The Emperor's Crown: His look ('a much less extreme Jabba the Hutt', LOCKED), the crown (LOCKED), Opening State (he still has the crown).",
+      "proposed": ["age, hair, clean-shaven, cloth-of-gold robe, tusk pendant"]
+    },
+    "mazirian": {
+      "name": "Mazirian, the vain councillor",
+      "region": "mage-city",
+      "body": "a tall, lean, very upright man in his sixties",
+      "face": "sharp handsome features gone haughty, nose raised, a short neatly trimmed silver beard, immaculate swept-back silver hair",
+      "outfit": "the most elaborate robes in the room: bone-white and gold, with a towering stiff embroidered collar and gold diagrams stitched over every panel; crystal rings",
+      "never": ["long flowing wizard beard", "pointed hat", "powdered wig"],
+      "canon": "Mage City: The High Council (the vain one, Mazirian; three councillors).",
+      "proposed": ["entire appearance"]
+    },
+    "proceduralist": {
+      "name": "The proceduralist (name OPEN)",
+      "region": "mage-city",
+      "body": "a small, plump, neat woman in her sixties",
+      "face": "tight grey bun, a pursed, polite little smile, round spectacles on a chain",
+      "outfit": "prim high-necked robes in dove grey with tiny embroidered seals down the front; always holding a ribbon-tied scroll and a quill",
+      "never": ["pink"],
+      "canon": "Mage City: The High Council (female proceduralist, Umbridge touchstone held at arm's length).",
+      "proposed": ["entire appearance"]
+    },
+    "rimwald": {
+      "name": "Rimwald, the zoned-out councillor",
+      "region": "mage-city",
+      "body": "a very old, frail, stooped man",
+      "face": "bald with wisps of white hair, a long untidy white beard, heavy-lidded drowsy eyes",
+      "outfit": "faded sea-green robes worn slightly askew, collar crooked",
+      "never": [],
+      "canon": "Mage City: The High Council (Rimwald, detached, half-asleep).",
+      "proposed": ["entire appearance"]
+    },
+    "skin-witch": {
+      "name": "The skin witch (name OPEN)",
+      "region": "north",
+      "body": "in human form, a small, kindly old woman, slightly stooped",
+      "face": "soft round face with deep smile lines, long grey braids, faded earned tattoo lines on the chin",
+      "outfit": "fur-trimmed undyed wool, a leather apron hung with herb pouches and bone charms",
+      "trueForm": "under the skin, a towering chimera of mismatched human and animal parts fused by raw, wet, pale flesh: several human arms of different sizes and skin tones, a goat's leg, a mouth in its chest full of tongues, an extra jaw, a few tentacles, joints bending the wrong way",
+      "never": ["horns", "wings", "a demon", "pentagrams"],
+      "canon": "The Skin Witch (LEANING): chimera under a human skin; village healer as conspirator is a Claude proposal James liked. The Honest God & Witchcraft: chimera flesh.",
+      "proposed": ["that the witch is an old woman", "face, braids, apron"]
+    },
+    "prison-guard": {
+      "name": "A prison guard",
+      "region": "breadbasket",
+      "body": "an ordinary human local, a paid shift worker, not a soldier",
+      "face": "tired, unremarkable, weathered",
+      "outfit": "crown-issued plain kit: a padded gambeson, a plain iron cap, a heavy ring of keys; a real sword or mace at the belt",
+      "never": ["elves", "batons or clubs", "fancy heraldic armour"],
+      "canon": "Story: Guards, arming (human, crown-issued, lethal weapons; LEANING).",
+      "proposed": ["gambeson, iron cap"]
+    },
+    "prison-chaplain": {
+      "name": "The prison chaplain (the town priest)",
+      "region": "breadbasket",
+      "body": "a modest, ordinary middle-aged village priest",
+      "face": "careworn and gentle",
+      "outfit": "a plain dark parish cassock, a simple wooden prayer token on a cord",
+      "never": ["cathedral finery", "zealot's fervour"],
+      "canon": "Story: the parish priest doubles as the prison's chaplain (James); sincere, numbed or troubled is OPEN.",
+      "proposed": ["entire appearance"]
+    }
+  },
+  "openingOutfits": {
+    "about": "The player and cellmates wake in their own plain peasant clothes, stripped of anything useful, loosely flavoured by archetype (Story: What you're wearing, James). Bodies and faces come from the player, not this file.",
+    "warrior": "sturdy work clothes: a thick wool tunic, a scuffed leather jerkin with its buckles cut away, heavy trousers, bare feet or worn boots with no laces",
+    "rogue": "a close-fitting, worn dark tunic and a frayed hood, soft patched boots",
+    "mage": "a plain undyed woollen robe tied with a rope belt",
+    "proposed": ["all three outfits beyond 'sturdier work clothes' and 'a plain woollen robe' (Claude examples on Story)"]
+  },
+  "locations": {
+    "delta-joust": {
+      "name": "The arrival joust",
+      "region": "delta",
+      "look": "an open-air jousting list on the Strip: a sanded lane split by a wooden tilt rail, plank boardwalk stands packed with spectators, painted false fronts and striped tents behind, pennants and bunting overhead",
+      "canon": "The Delta: Arrival (LOCKED)."
+    },
+    "mage-city-skyline": {
+      "name": "The mage city from the desert",
+      "region": "mage-city",
+      "look": "the whole city seen from the desert floor: pale mesa, flowing bone-white towers, at least three floating staircases with no supports, floating bridges, and at the centre the High Council's ornate building with a smooth seamless face and no door, window or opening of any kind; humble mud-brick domes tiny at the foot of the cliffs; empty desert to the horizon",
+      "canon": "Mage City: Architecture (LEANING), responsive entrance-less council building."
+    },
+    "council-chamber": {
+      "interior": true,
+      "name": "The High Council chamber",
+      "region": "mage-city",
+      "look": "a bright, pale chamber with smooth curving white walls of fused glass and bone-coloured stone, flowing like Zaha Hadid architecture, lit by daylight from above; a high curved bench for three; the orb on a stone plinth in the middle of the floor",
+      "never": ["torches", "dark stone", "candles"],
+      "canon": "The Oracle Orb (orb on a plinth, session-only).",
+      "proposed": ["the interior"]
+    },
+    "elven-plateau": {
+      "name": "The elven plateau",
+      "region": "elves",
+      "look": "the plateau seen from the air: sheer cliffs rooted to the mountain range, the sacred lake in the middle, Gaudí stone spires around it, an aqueduct feeding fountains, terraced vineyards; lower on the mountainside, in haze, the separate church city on the flank",
+      "canon": "Regions (plateau, endorheic lake; holy city on the flank, LOCKED); The Hoarded Fountain (aqueduct)."
+    },
+    "great-hall": {
+      "name": "A northern great hall",
+      "region": "north",
+      "look": "a great hall built by people with no carpenters: crude, uneven, improvised. Walls are a patchwork of planks of different widths, ages and colours, some charred; new pale timber lashed with rope to old blackened beams; animal hides nailed over holes; daylight and snow showing through gaps; stone only at the base. A long central fire pit is the only warmth. One whole wall is a smoke-darkened timber board carved top to bottom with rows of runic names: the wall of names",
+      "canon": "The North (make-do, great hall with central fire, LOCKED); The North Rebellion (wall of names, LOCKED)."
+    },
+    "rooted-city": {
+      "name": "The rooted city",
+      "region": "mage-city",
+      "look": "a vast underground city in a cavern: streets and tiers of buildings made of brass-and-iron machinery (gears, pistons, pipes, great clockwork engines) receding into the distance, all half-swallowed by pale roots, vines and furred grey fungus; faint lights still glow; a few gears still turn",
+      "canon": "Combustion: The dungeon: the rooted city; the cold open (LEANING)."
+    },
+    "witch-den": {
+      "interior": true,
+      "name": "The skin witch's den",
+      "region": "north",
+      "look": "a low, torchlit den of rough timber and stone, drying herbs and bone charms hanging from the beams, and a ring of carved northern runes on the floor",
+      "canon": "The Skin Witch (dungeon layout OPEN).",
+      "proposed": ["the whole den"]
+    },
+    "prison-cell": {
+      "interior": true,
+      "name": "The cell",
+      "region": "breadbasket",
+      "look": "a small cell for three, about three by two and a half metres, at ground level: rough undressed fieldstone walls in lime mortar, damp stone flags on the floor, a timber beam-and-plank ceiling; a heavy iron-banded timber door with a small barred grille at head height and a food hatch below it; a timber plank shelf with old straw along one wall, more straw on the floor; a wooden water jug and a slop bucket; one narrow barred slit window high on the outer wall letting in a blade of daylight",
+      "never": ["walls or doors made of iron bars", "a basement dungeon", "shackles on the walls", "skeletons"],
+      "canon": "Story: The cell: daily routine and contents (LEANING; size, walls, window are Claude proposals James approved)."
+    },
+    "cell-block": {
+      "interior": true,
+      "name": "The cell block",
+      "region": "breadbasket",
+      "look": "a long, single-storey stone hall at ground level, a row of heavy timber cell doors with small grilles down one side, a timber ceiling, daylight from high slit windows",
+      "never": ["iron-bar cells", "stairs down", "tiers of cells"],
+      "canon": "Story: The prison itself; The interior (LEANING)."
+    },
+    "prison-exterior": {
+      "name": "The prison on the trade road",
+      "region": "breadbasket",
+      "look": "a long, low, single-storey stone building with a timber roof and one gate, plain and purely functional, the one hard stone thing in soft farm country; the busiest trade road in the world runs past it, crowded with wagons and travellers; a small timber town (cottages, an inn with a stable, a parish church with a graveyard) clusters around it among grain fields",
+      "never": ["a castle", "towers", "a moat"],
+      "canon": "Story: Where the prison sits; The prison itself; Guards, arming, the prison town (LEANING)."
+    }
+  }
+}

@@ -1,0 +1,18 @@
+[
+ {"id":"joust","name":"The arrival joust","aspectRatio":"16:9","request":{"kind":"moment","location":"delta-joust","crowd":true,
+  "action":"Mid-gallop, a lance punches through a knight's throat; he is flung backwards out of his saddle in a spray of blood, his helmet flying off. The packed crowd on the boardwalk cheers wildly, raising tankards, delighted. In the foreground, one traveller in plain road clothes grips the rail and stares in horror, the only face not cheering. The air is hot, wet and hazy, steam rising off the horses."}},
+ {"id":"emperor","name":"The self-crowned emperor","aspectRatio":"1:1","request":{"kind":"portrait","characters":["emperor"],
+  "action":"Head-and-shoulders portrait. His crown has slipped crooked, sliding down over one eyebrow. He holds a stiff, over-rehearsed royal pose copied from paintings, chin raised and hand on chest, but grease shines on his chin and his eyes dart sideways in panic: grotesque, pitiable, a frightened man in a costume. Gaudy torchlit hall behind him, no other people."}},
+ {"id":"mage-city","name":"The mage city","aspectRatio":"16:9","request":{"kind":"location","location":"mage-city-skyline",
+  "action":"A pale city on a desert mesa under a hard blue sky, seen from the desert floor.","never":["crystal towers","glass shards"]}},
+ {"id":"orb","name":"The orb and the left shoe","aspectRatio":"16:9","request":{"kind":"moment","location":"council-chamber","characters":["mazirian","proceduralist","rimwald"],
+  "action":"Comedy scene. Mazirian stands before the glowing orb, solemnly offering it his own left shoe, held out reverently in both hands. His left foot is lifted off the floor in just a stocking, shoeless; his right foot still wears its shoe. His face is utterly serious and proud. Behind him at the high bench, the proceduralist fusses with her scroll and Rimwald nods off. Beside the orb, a faint transparent ripple in the air like heat haze. Only these three people in the room.","never":["steam or smoke from the orb","other figures or silhouettes"]}},
+ {"id":"plateau","name":"The elven plateau","aspectRatio":"16:9","request":{"kind":"location","location":"elven-plateau",
+  "action":"The elven plateau in clear morning light, seen from the air.","never":["pointed Gothic arches"]}},
+ {"id":"great-hall","name":"The great hall and the wall of names","aspectRatio":"16:9","request":{"kind":"location","location":"great-hall",
+  "action":"Interior of a northern great hall in deep winter, seen from near the fire. Antlers, furs and beast skulls hang as trophies; drying herbs and roots hang from the rafters; runes are carved on the beams; bone charms hang by the door."}},
+ {"id":"rooted-city","name":"The rooted city wakes","aspectRatio":"16:9","request":{"kind":"moment","location":"rooted-city",
+  "action":"Action shot from the victim's point of view. A heavy wooden table is hurtling straight at the viewer: its underside and four legs fill the foreground, inches from hitting, hurled by thick pale roots whipping up out of the floor; motion lines, spores bursting off it. Behind it a chair rears up on its back legs and a ceiling fan blade swings down, both driven by vines."}},
+ {"id":"skin-witch","name":"The skin comes off","aspectRatio":"16:9","request":{"kind":"moment","location":"witch-den","characters":["skin-witch"],"revealTrueForm":["skin-witch"],
+  "action":"Body horror. Facing the viewer, the skin witch is splitting open down the middle. Her gentle, smiling face stays on her head at normal size, peeling down from the brow like a loose mask; the true form bursts out of the split skin and towers over her, the empty human skin hanging off it like a coat."}}
+]

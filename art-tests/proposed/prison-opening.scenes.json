@@ -1,0 +1,16 @@
+[
+ {"id":"wake","name":"Waking in the cell","aspectRatio":"16:9","request":{"kind":"moment","location":"prison-cell",
+  "action":"Point of view of a prisoner just waking on the straw floor of a cell, looking up. Two cellmates in plain, dirty peasant clothes: one sits on the plank shelf watching you warily, one stands at the door with their face to the grille, looking out. A blade of early daylight from the slit window falls across the straw. Quiet, uncertain."}},
+ {"id":"cell","name":"The cell, empty","aspectRatio":"16:9","request":{"kind":"location","location":"prison-cell",
+  "action":"The cell, empty, in early morning light."}},
+ {"id":"grille","name":"The guard at the grille","aspectRatio":"16:9","request":{"kind":"moment","location":"prison-cell","characters":["prison-guard"],
+  "action":"Seen from inside the cell: a prison guard's tired face fills the small barred grille in the heavy timber door, looking in without interest, a ring of keys raised in one hand. The rest of the door and the cell's stone wall frame him."}},
+ {"id":"bucket","name":"The bucket swap","aspectRatio":"16:9","request":{"kind":"moment","location":"cell-block","characters":["prison-guard"],
+  "action":"The one moment each day a cell door stands open. One guard holds the unbolted timber door; a second guard stands a step back, hand on his sword hilt, watching. A prisoner in plain peasant clothes steps into the doorway handing out a full slop bucket. The long stone hall of cell doors stretches away behind the guards."}},
+ {"id":"chaplain","name":"What are you in for?","aspectRatio":"16:9","request":{"kind":"moment","location":"prison-cell","characters":["prison-chaplain"],
+  "action":"Seen from inside the cell: through the small barred grille of the timber door, the prison chaplain looks in with a gentle, careworn face, holding a small candle lantern, as if asking a question. Warm candlelight on the grille, cold stone around it."}},
+ {"id":"exterior","name":"The prison on the trade road","aspectRatio":"16:9","request":{"kind":"moment","location":"prison-exterior","crowd":true,
+  "action":"The prison seen from the trade road at midday, wagons and travellers passing in the foreground, none of them looking at it."}},
+ {"id":"convoy","name":"The convoy","aspectRatio":"16:9","request":{"kind":"moment","region":"breadbasket","characters":["prison-guard"],
+  "action":"On the busy trade road through grain fields, a horse-drawn wagon carries shackled prisoners in plain peasant clothes toward the delta; armed guards ride alongside on horseback, swords at their hips. Travellers step aside to let it pass and look away. Hot afternoon, dust in the air."}}
+]

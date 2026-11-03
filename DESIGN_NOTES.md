@@ -2,6 +2,13 @@
 
 Short playtest notes, newest first. One entry per task: date, what changed, what felt good or bad, what to try next.
 
+## 2026-11-03: Visual bible and Round 13 proofs
+
+- Added `src/art/visual-bible.json` (look sheets for regions, recurring characters and places, each with canon sources, proposals and a do-not-draw list), `composeImagePrompt()` with tests, and `scripts/art-proof.mjs` to generate proofs from it.
+- Good: characters stay themselves across takes (the emperor, the three councillors, the skin witch). The north's make-do look finally landed, and the rooted city's table comes at you.
+- Bad: region dress gets taken literally (an alligator-man from "alligator-skin coats", now reworded); split comic panels and borders still appear; the emperor's crown won't slip.
+- Next: get James's yes or no on the proposed looks; run the prison-opening scenes in `art-tests/proposed/prison-opening.scenes.json`.
+
 ## 2026-11-03: Art proofs, rewritten prompts
 
 - Rewrote the eight key-scene prompts against their Round 11 verdicts and ran two takes each (Round 12 of the Art Style Proofs artifact, images in `art-tests/2026-11-03-key-scenes-v2`).
