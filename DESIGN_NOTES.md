@@ -2,6 +2,12 @@
 
 Short playtest notes, newest first. One entry per task: date, what changed, what felt good or bad, what to try next.
 
+## 2026-11-03: Skin witch reveal and reference images
+
+- The witch read as wearing a face because the prompt literally asked for a face "peeling like a mask". Restaged three ways (Round 14); the shadow-on-the-wall tell and the spine split work, the empty skin on the floor doesn't. Her sheet now says no masks, no second face.
+- First use of reference images: one portrait of her human form, sent with each reveal prompt. She stayed the same woman in all six takes, a stronger match than the sheets alone.
+- Next: give every recurring character one approved reference portrait, generated once and sent with every later image of them.
+
 ## 2026-11-03: Visual bible and Round 13 proofs
 
 - Added `src/art/visual-bible.json` (look sheets for regions, recurring characters and places, each with canon sources, proposals and a do-not-draw list), `composeImagePrompt()` with tests, and `scripts/art-proof.mjs` to generate proofs from it.

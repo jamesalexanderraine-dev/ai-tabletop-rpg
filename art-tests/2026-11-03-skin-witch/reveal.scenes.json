@@ -1,0 +1,11 @@
+[
+ {"id":"shed","name":"The empty skin","aspectRatio":"16:9","references":[{"path":"witch-human.webp","label":"the skin witch's human form, the kindly old healer"}],
+  "request":{"kind":"moment","location":"witch-den","characters":["skin-witch"],"revealTrueForm":["skin-witch"],
+  "action":"Aftermath of the reveal. On the den floor lies the healer's empty human skin, collapsed and flat like a shed snakeskin: her grey braids, her fur collar and apron still on it, her face slack, deflated and empty-eyed, recognisably her. Rising over it, wet and steaming, the true form that just climbed out, with its own mismatched head; it has no human face."}},
+ {"id":"back","name":"Splitting down the spine","aspectRatio":"16:9","references":[{"path":"witch-human.webp","label":"the skin witch's human form, the kindly old healer"}],
+  "request":{"kind":"moment","location":"witch-den","characters":["skin-witch"],"revealTrueForm":["skin-witch"],
+  "action":"Seen from behind and to one side. The healer stands hunched with her back to us, her head drooping forward, limp and empty like a sack, arms hanging slack: a long seam has torn open down her spine, and out of it the true form is unfolding, pale wet limbs pushing out and spreading upward. Her face is turned away and not visible."}},
+ {"id":"shadow","name":"The shadow on the wall","aspectRatio":"16:9","references":[{"path":"witch-human.webp","label":"the skin witch's human form, the kindly old healer"}],
+  "request":{"kind":"moment","location":"witch-den","characters":["skin-witch"],
+  "action":"Before the reveal. The healer smiles kindly and offers a steaming wooden cup, completely human from the neck up. But things are wrong: a third, too-long hand rests on the table beside her, half hidden by her shawl, and the shadow the torch throws of her on the wall behind is not hers: a towering shape with too many arms, tentacles and an extra jaw. She hasn't noticed; the viewer has."}}
+]
